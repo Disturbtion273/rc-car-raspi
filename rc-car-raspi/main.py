@@ -3,13 +3,14 @@ import time
 from I2C import I2C
 from PWM import PWM
 from Motor import Motor
+from Data import Data
 
 class Main:
     def __init__(self):
         self.i2c = I2C()
         self.pwm = PWM(self.i2c)
-        self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=self.pwm.Motor1Channel, motorNumber=1)
-        self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=self.pwm.Motor2Channel, motorNumber=2)
+        self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=Data.channelDict["Motor1"], motorNumber=1)
+        self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.channelDict["Motor2"], motorNumber=2)
 
     def Run(self):
         try:

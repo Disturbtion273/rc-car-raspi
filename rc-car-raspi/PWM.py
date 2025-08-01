@@ -3,8 +3,6 @@ class PWM:
         self.I2C = i2c
         self.TimerRegister = 0x44
         self.PrescalerRegister = 0x40
-        self.Motor1Channel = 0x2D
-        self.Motor2Channel = 0x2C
 
     def InitializeTimer(self, frequency=50):
         self.I2C.WriteWordData(self.TimerRegister, 4095)
