@@ -18,9 +18,9 @@ class PWM:
         value = max(0, min(speed, 4095))
         self.i2c.WriteWordData(channel, value)
 
-    def SetServoPwm(self, pin, value):
-        pulse_us = min_us + (angle / 180.0) * (max_us - min_us)
+    def SetServoPwm(self, pin, value, min_us=500, max_us=2500):
+        pulse_us = min_us + (value / 180.0) * (max_us - min_us)
         period_us = 1e6 / Data.Pwm["ServoFrequencyHz"]
-        duty_cycle = pulse_us / period_us
-        pulse = int(duty_cycle * Data.Pwm["Resolution"])
+        dutyCycle = pulse_us / period_us
+        pulse = int(dutyCycle * Data.Pwm["Resolution"])
         self.i2c.writeRegister(Data.Registers["ChannelBase"] + pin, pulse)
