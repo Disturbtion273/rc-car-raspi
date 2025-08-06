@@ -9,14 +9,14 @@ class GrayscaleSensor:
         value = self.ReadGrayscale(sensorNumber)
         value = max(0, min(value, 1500)) # Range from 0 to 1500
         value = (value / 1500) * 100  # Convert to percentage
-        value = round(value, 2)  # Round to two decimal places
+        value = round(value, 2)  
         return value
 
     def ReadAverageGrayscalePercent(self):
         average = self.ReadAverageGrayscale()
         average = max(0, min(average, 1500)) # Range from 0 to 1500
         average = (average / 1500) * 100  # Convert to percentage
-        average = round(average, 2)  # Round to two decimal places
+        average = round(average, 2)  
         return average
 
     def ReadGrayscale(self, sensorNumber):
