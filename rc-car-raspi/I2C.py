@@ -22,10 +22,18 @@ class I2C:
         value = (lsb << 8) + msb
         self.bus.write_word_data(self.address, register, value)
 
-    def writeRegister(self, reg_addr, value):
+    def WriteRegister(self, register, value):
         high_byte = (value >> 8) & 0xFF
         low_byte = value & 0xFF
-        self.bus.write_i2c_block_data(self.address, reg_addr, [high_byte, low_byte])
+        self.bus.write_i2c_block_data(self.address, register, [high_byte, low_byte])
+
+    def ReadADC(self, register):
+        self.bus.write_word_data(self.address, register, 0x0000)
+        msb = self.bus.read_byte(self.address)
+        lsb = self.bus.read_byte(self.address)
+        value = (msb << 8) | lsb
+        return value
+
 
     # <summary>
     # Schließt die Verbindung zum I2C-Bus, um Ressourcenfreigabe sicherzustellen.

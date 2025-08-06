@@ -30,3 +30,10 @@ class Data:
         "1": {"min": 10, "max": 140},  # Range for servo pin 1
         "2": {"min": 50, "max": 120},  # Range for servo pin 2
     }
+
+    # ADC
+    ADC = {
+        "1": 0x17,  # ADC register address for sensor 0
+        "2": 0x16,  # ADC register address for sensor 1
+        "3": 0x15,  # ADC register address for sensor 2
+    }
