@@ -10,9 +10,9 @@ class PWM:
         self.i2c.WriteWordData(Data.Pwm["Timer"], 4095)
         prescaler = int(72000000 / (4095 + 1) / frequency) - 1
         self.i2c.WriteWordData(Data.Registers["Prescaler"], prescaler)
-        self.i2c.writeRegister(Data.Registers["AutoReloadRegister"] + Data.Pwm["Timer"], Data.Pwm["Resolution"])
+        self.i2c.WriteRegister(Data.Registers["AutoReloadRegister"] + Data.Pwm["Timer"], Data.Pwm["Resolution"])
         prescaler = int(72000000 / ((Data.Pwm["Resolution"] + 1) * Data.Pwm["ServoFrequencyHz"])) - 1
-        self.i2c.writeRegister(Data.Registers["Prescaler"] + Data.Pwm["Timer"], prescaler)
+        self.i2c.WriteRegister(Data.Registers["Prescaler"] + Data.Pwm["Timer"], prescaler)
 
     def SetMotorPwm(self, channel, speed):
         value = max(0, min(speed, 4095))
@@ -23,4 +23,5 @@ class PWM:
         period_us = 1e6 / Data.Pwm["ServoFrequencyHz"]
         dutyCycle = pulse_us / period_us
         pulse = int(dutyCycle * Data.Pwm["Resolution"])
-        self.i2c.writeRegister(Data.Registers["ChannelBase"] + pin, pulse)
+        self.i2c.WriteRegister(Data.Registers["ChannelBase"] + pin, pulse)
+        

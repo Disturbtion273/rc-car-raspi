@@ -14,3 +14,4 @@ class Servo:
     def SetAnglePercent(self, angle: int):
         value = self.ScaleValue(angle)
         self.pwm.SetServoPwm(self.pin, value)
+
