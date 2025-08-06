@@ -1,19 +1,26 @@
-class PWM:
-    def __init__(self, i2c):
-        self.I2C = i2c
-        self.TimerRegister = 0x44
-        self.PrescalerRegister = 0x40
+from Data import Data
 
-    def InitializeTimer(self, frequency=50):
-        self.I2C.WriteWordData(self.TimerRegister, 4095)
+class PWM:    
+    def __init__(self, i2c, frequency=Data.Pwm["ServoFrequencyHz"]):
+        self.i2c = i2c
+        self.pwmFreq = frequency
+        self.Setup()
+
+    def Setup(self, frequency=50):
+        self.i2c.WriteWordData(Data.Pwm["Timer"], 4095)
         prescaler = int(72000000 / (4095 + 1) / frequency) - 1
-        self.I2C.WriteWordData(self.PrescalerRegister, prescaler)
+        self.i2c.WriteWordData(Data.Registers["Prescaler"], prescaler)
+        self.i2c.writeRegister(Data.Registers["AutoReloadRegister"] + Data.Pwm["Timer"], Data.Pwm["Resolution"])
+        prescaler = int(72000000 / ((Data.Pwm["Resolution"] + 1) * Data.Pwm["ServoFrequencyHz"])) - 1
+        self.i2c.writeRegister(Data.Registers["Prescaler"] + Data.Pwm["Timer"], prescaler)
 
     def SetMotorPwm(self, channel, speed):
         value = max(0, min(speed, 4095))
-        # Tauscht MSB mit LSB für die I2C Kommunikation
-        msb = (value >> 8) & 0xFF
-        lsb = value & 0xFF
-        swapped = (lsb << 8) + msb
-        
-        self.I2C.WriteWordData(channel, swapped)
+        self.i2c.WriteWordData(channel, value)
+
+    def SetServoPwm(self, pin, value, min_us=500, max_us=2500):
+        pulse_us = min_us + (value / 180.0) * (max_us - min_us)
+        period_us = 1e6 / Data.Pwm["ServoFrequencyHz"]
+        dutyCycle = pulse_us / period_us
+        pulse = int(dutyCycle * Data.Pwm["Resolution"])
+        self.i2c.writeRegister(Data.Registers["ChannelBase"] + pin, pulse)
