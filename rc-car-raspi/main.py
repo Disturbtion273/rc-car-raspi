@@ -16,7 +16,7 @@ class Main:
         self.pwm = PWM(self.i2c)
         self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=Data.Motors["Left"], motorNumber=1)
         self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.Motors["Right"], motorNumber=2)
-        self.servo = Servo(self.i2c, 2)
+        self.servo = Servo(self.pwm, 0)
 
         try:
             self.motorLeft.SetSpeedPercent(0)
