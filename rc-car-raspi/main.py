@@ -14,9 +14,9 @@ class Main:
         
         self.i2c = I2C()
         self.pwm = PWM(self.i2c)
-        self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=Data.channelDict["Motor1"], motorNumber=1)
-        self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.channelDict["Motor2"], motorNumber=2)
-        self.servo = Servo(self.i2c, 0)
+        self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=Data.Motors["Left"], motorNumber=1)
+        self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.Motors["Right"], motorNumber=2)
+        self.servo = Servo(self.i2c, 2)
 
         try:
             self.motorLeft.SetSpeedPercent(0)
@@ -24,13 +24,10 @@ class Main:
             time.sleep(1)
 
             print("Servo-Test beginnt...")
-            for angle in range(0, 110, 30):
-                self.servo.set_angle(angle)
-                time.sleep(0.5)
-
-            for angle in range(110, -1, -30):
-                self.servo.set_angle(angle)
-                time.sleep(0.5)
+            self.servo.SetAnglePercent(0)
+            time.sleep(1)
+            self.servo.SetAnglePercent(100)
+            
             print("Servo-Test abgeschlossen.")
             time.sleep(5)
             print("Vorwärts")
@@ -41,9 +38,9 @@ class Main:
         except KeyboardInterrupt:
             print("Beendet durch Benutzer")
         finally:
-            GPIO.cleanup()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
+            GPIO.cleanup()
             self.i2c.Close()
         """
         try:
