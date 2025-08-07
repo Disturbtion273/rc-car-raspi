@@ -22,6 +22,8 @@ class Data:
     Motors = {
         "Left": 0x2D,   # I2C register address for left motor control
         "Right": 0x2C,  # I2C register address for right motor control
+        "DirectionLeft": 23,  # GPIO pin for left motor direction control
+        "DirectionRight": 24, # GPIO pin for right motor direction control
     }
 
     # Servo Ranges
@@ -36,4 +38,10 @@ class Data:
         "1": 0x17,  # ADC register address for sensor 0
         "2": 0x16,  # ADC register address for sensor 1
         "3": 0x15,  # ADC register address for sensor 2
+    }
+
+    # Ultrasonic Sensor 
+    UltrasonicSensor = {
+        "TriggerPin": 27,  # GPIO pin for triggering the ultrasonic sensor
+        "EchoPin": 22,     # GPIO pin for receiving the echo from the ultrasonic sensor
     }

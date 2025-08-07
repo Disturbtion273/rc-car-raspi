@@ -7,70 +7,96 @@ from Motor import Motor
 from Data import Data  
 from Servo import Servo 
 from GrayscaleSensor import GrayscaleSensor  
+from UltrasonicSensor import UltrasonicSensor
 import time
+import sys
 
 class Main:
-
-    def run(self):
-        
+    def Test(self):
         self.i2c = I2C()
         self.pwm = PWM(self.i2c)
-        self.motorLeft = Motor(self.pwm, directionPin=23, pwmChannel=Data.Motors["Left"], motorNumber=1)
-        self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.Motors["Right"], motorNumber=2)
-        self.servo = Servo(self.pwm, 0)
+        self.motorLeft = Motor(self.pwm, motorNumber=1)
+        self.motorRight = Motor(self.pwm, motorNumber=2)
+        self.servoTilt = Servo(self.pwm, 0)
+        self.servoPan = Servo(self.pwm, 1)
+        self.servoSteering = Servo(self.pwm, 2) 
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
+        self.ultrasonicSensor = UltrasonicSensor()
 
         try:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             time.sleep(1)
+            print("----Start Test:----")
+            print("Ultrasonic-Sensor-Test beginnt...")
+            for i in range(5):
+                distance = self.ultrasonicSensor.GetDistance()
+                print(f"Entfernung: {distance:.2f} cm")
+                time.sleep(0.5)
 
             print("Grayscale-Sensor-Test beginnt...")
-            for i in range(10):
-                sensor_value = self.grayscaleSensor.ReadGrayscalePercent(1)
-                print(f"Sensor 1 Wert: {sensor_value}")
-                sensor_value = self.grayscaleSensor.ReadGrayscalePercent(2)
-                print(f"Sensor 2 Wert: {sensor_value}")
-                sensor_value = self.grayscaleSensor.ReadGrayscalePercent(3)
-                print(f"Sensor 3 Wert: {sensor_value}")
-                average_value = self.grayscaleSensor.ReadAverageGrayscalePercent()
-                print(f"Durchschnittswert: {average_value}")
+            for i in range(5):
+                sensorValue = self.grayscaleSensor.ReadGrayscalePercent(1)
+                print(f"Sensor 1 Wert: {sensorValue}")
+                sensorValue = self.grayscaleSensor.ReadGrayscalePercent(2)
+                print(f"Sensor 2 Wert: {sensorValue}")
+                sensorValue = self.grayscaleSensor.ReadGrayscalePercent(3)
+                print(f"Sensor 3 Wert: {sensorValue}")
+                averageValue = self.grayscaleSensor.ReadAverageGrayscalePercent()
+                print(f"Durchschnittswert: {averageValue}")
                 time.sleep(0.5)
 
             print("Servo-Test beginnt...")
-            self.servo.SetAnglePercent(0)
+            print("Tilt")
+            self.servoTilt.SetAnglePercent(0)
             time.sleep(1)
-            self.servo.SetAnglePercent(100)
-            
-            print("Servo-Test abgeschlossen.")
-            time.sleep(5)
+            self.servoTilt.SetAnglePercent(100)
+            time.sleep(1)
+            self.servoTilt.SetAnglePercent(50)
+            time.sleep(1)
+            print("Pan")
+            self.servoPan.SetAnglePercent(0)
+            time.sleep(1)
+            self.servoPan.SetAnglePercent(100)
+            time.sleep(1)
+            self.servoPan.SetAnglePercent(50)
+            time.sleep(1)
+            print("Steering")
+            self.servoSteering.SetAnglePercent(0)
+            time.sleep(1)
+            self.servoSteering.SetAnglePercent(100)
+            time.sleep(1)
+            self.servoSteering.SetAnglePercent(50)
+
+            print("Motor-Test beginnt...")
+            time.sleep(2)
             print("Vorwärts")
-            for i in range(0, 101, 20):
-                self.motorLeft.SetSpeedPercent(i)
-                self.motorRight.SetSpeedPercent(i)
-                time.sleep(1)
+            self.motorLeft.SetSpeedPercent(20)
+            self.motorRight.SetSpeedPercent(20)
+            time.sleep(1)
+            print("Rückwärts")
+            self.motorLeft.SetSpeedPercent(-20)
+            self.motorRight.SetSpeedPercent(-20)
+            time.sleep(1)
+            print("Alle Tests beendet.")
+
         except KeyboardInterrupt:
             print("Beendet durch Benutzer")
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             GPIO.cleanup()
             self.i2c.Close()
-        """
-        try:
-            pwm.setup()
-            while True:
-                for angle in range(110, 180, 5):
-                    pwm.set_servo_angle(angle)
-                    time.sleep(0.05)
-                for angle in range(180, 110, -5):
-                    pwm.set_servo_angle(angle)
-                    time.sleep(0.05)
-        except KeyboardInterrupt:
-            print("Beendet durch Benutzer")
-        finally:
-            i2c.close()
-        """
 
+
+    def run(self):
+        pass
+        
 if __name__ == '__main__':
-    Main().run()
+    # Runs Tests when test is written behind main.py on the command line
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        Main().Test()
+    else:
+        Main().run()
