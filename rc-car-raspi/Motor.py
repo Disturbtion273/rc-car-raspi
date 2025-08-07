@@ -1,30 +1,38 @@
 import RPi.GPIO as GPIO
+from Data import Data
 
 class Motor:
-    def __init__(self, pwm, directionPin, pwmChannel, motorNumber):
+    def __init__(self, pwm, motorNumber):
         self.PWM = pwm
-        self.directionPin = directionPin
-        self.pwmChannel = pwmChannel
+        self.directionPin = Data.Motors["DirectionLeft"] if motorNumber == 1 else Data.Motors["DirectionRight"]
+        self.pwmChannel = Data.Motors["Left"] if motorNumber == 1 else Data.Motors["Right"]
         self.motorNumber = motorNumber
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.directionPin, GPIO.OUT)
 
-    # <summary>
-    # Setzt die Drehrichtung des Motors.
-    # </summary>
-    # <param name="forward">True für Vorwärts, False für Rückwärts.</param
     def SetDirection(self,forward=True):
+        """
+        Set the rotation direction of the motor.
+
+        :param forward: True for forward, False for reverse.
+        :type forward: bool
+        """
         if self.motorNumber == 1:
             GPIO.output(self.directionPin, GPIO.LOW if forward else GPIO.HIGH)
         elif self.motorNumber == 2:
             GPIO.output(self.directionPin, GPIO.HIGH if forward else GPIO.LOW)
 
-    # <summary>
-    # Setzt die Geschwindigkeit des Motors in Prozent.
-    # </summary>
-    # <param name="speedPercent">Die gewünschte Geschwindigkeit in Prozent. -100 - -1 für Rückwärts, 0 für Stop, 1 - 100 für Vorwärts.</param>
     def SetSpeedPercent(self, speedPercent):
+        """
+        Set the motor speed as a percentage.
+
+        :param speedPercent: Desired speed percentage.
+                            -100 to -1 for reverse,
+                             0 to stop,
+                             1 to 100 for forward.
+        :type speedPercent: int
+        """
         if speedPercent > 0:
             speedPercent = max(15, min(speedPercent, 100))
             self.SetDirection(forward=True)
@@ -35,14 +43,14 @@ class Motor:
             self.Stop()
             return
 
-        # Eine mindest Geschwindgeit von 15% für Vorwärts und -85% für Rückwärts ist nötig,
-        # da der Motor sonst nicht richtig anläuft. Es ist auf 2028 begrenzt, da höhere Werte keine Veränderung mehr bewirken.
+        # A minimum speed of 15% is required for forward motion, and 85% for reverse,
+        # as the motor won't run reliably below that.
         speedPercent = max(15, min(speedPercent, 100))
         pwmValue = int((speedPercent / 100.0) * 2028)
         self.PWM.SetMotorPwm(self.pwmChannel, pwmValue)
 
-    # <summary>
-    # Stoppt den Motor
-    # </summary>
     def Stop(self):
+        """
+        Stop the motor by setting PWM to 0.
+        """
         self.PWM.SetMotorPwm(self.pwmChannel, 0)

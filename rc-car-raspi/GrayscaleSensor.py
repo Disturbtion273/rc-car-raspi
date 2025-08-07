@@ -3,7 +3,6 @@ from Data import Data
 class GrayscaleSensor:
     def __init__(self, i2c):
         self.i2c = i2c
-
     
     def ReadGrayscalePercent(self, sensorNumber):
         value = self.ReadGrayscale(sensorNumber)

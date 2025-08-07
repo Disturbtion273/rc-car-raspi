@@ -22,6 +22,8 @@ class Data:
     Motors = {
         "Left": 0x2D,   # I2C register address for left motor control
         "Right": 0x2C,  # I2C register address for right motor control
+        "DirectionLeft": 23,  # GPIO pin for left motor direction control
+        "DirectionRight": 24, # GPIO pin for right motor direction control
     }
 
     # Servo Ranges
