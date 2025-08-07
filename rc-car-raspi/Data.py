@@ -37,3 +37,9 @@ class Data:
         "2": 0x16,  # ADC register address for sensor 1
         "3": 0x15,  # ADC register address for sensor 2
     }
+
+    # Ultrasonic Sensor 
+    UltrasonicSensor = {
+        "TriggerPin": 27,  # GPIO pin for triggering the ultrasonic sensor
+        "EchoPin": 22,     # GPIO pin for receiving the echo from the ultrasonic sensor
+    }

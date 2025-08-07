@@ -7,6 +7,7 @@ from Motor import Motor
 from Data import Data  
 from Servo import Servo 
 from GrayscaleSensor import GrayscaleSensor  
+from UltrasonicSensor import UltrasonicSensor
 import time
 
 class Main:
@@ -19,11 +20,18 @@ class Main:
         self.motorRight = Motor(self.pwm, directionPin=24, pwmChannel=Data.Motors["Right"], motorNumber=2)
         self.servo = Servo(self.pwm, 0)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
+        self.ultrasonicSensor = UltrasonicSensor()
 
         try:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             time.sleep(1)
+            print("----Start Test:----")
+            print("Ultrasonic-Sensor-Test beginnt...")
+            for i in range(10):
+                distance = self.ultrasonicSensor.GetDistance()
+                print(f"Entfernung: {distance:.2f} cm")
+                time.sleep(0.5)
 
             print("Grayscale-Sensor-Test beginnt...")
             for i in range(10):
@@ -42,35 +50,27 @@ class Main:
             time.sleep(1)
             self.servo.SetAnglePercent(100)
             
-            print("Servo-Test abgeschlossen.")
             time.sleep(5)
             print("Vorwärts")
             for i in range(0, 101, 20):
                 self.motorLeft.SetSpeedPercent(i)
                 self.motorRight.SetSpeedPercent(i)
                 time.sleep(1)
+            print("Rückwärts")
+            for i in range(100, -1, -20):
+                self.motorLeft.SetSpeedPercent(-i)
+                self.motorRight.SetSpeedPercent(-i)
+                time.sleep(1)
+
         except KeyboardInterrupt:
             print("Beendet durch Benutzer")
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             GPIO.cleanup()
             self.i2c.Close()
-        """
-        try:
-            pwm.setup()
-            while True:
-                for angle in range(110, 180, 5):
-                    pwm.set_servo_angle(angle)
-                    time.sleep(0.05)
-                for angle in range(180, 110, -5):
-                    pwm.set_servo_angle(angle)
-                    time.sleep(0.05)
-        except KeyboardInterrupt:
-            print("Beendet durch Benutzer")
-        finally:
-            i2c.close()
-        """
 
 if __name__ == '__main__':
     Main().run()
