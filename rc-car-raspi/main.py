@@ -3,13 +3,14 @@
 import RPi.GPIO as GPIO
 from I2C import I2C
 from PWM import PWM
-from Motor import Motor  
-from Data import Data  
-from Servo import Servo 
-from GrayscaleSensor import GrayscaleSensor  
+from Motor import Motor
+from Data import Data
+from Servo import Servo
+from GrayscaleSensor import GrayscaleSensor
 from UltrasonicSensor import UltrasonicSensor
 import time
 import sys
+from websocket import WebsocketServer
 
 class Main:
     def Test(self):
@@ -19,9 +20,10 @@ class Main:
         self.motorRight = Motor(self.pwm, motorNumber=2)
         self.servoTilt = Servo(self.pwm, 0)
         self.servoPan = Servo(self.pwm, 1)
-        self.servoSteering = Servo(self.pwm, 2) 
+        self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
+        WebsocketServer.Start("0.0.0.0", 9999)
 
         try:
             self.motorLeft.SetSpeedPercent(0)
@@ -93,7 +95,7 @@ class Main:
 
     def run(self):
         pass
-        
+
 if __name__ == '__main__':
     # Runs Tests when test is written behind main.py on the command line
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
