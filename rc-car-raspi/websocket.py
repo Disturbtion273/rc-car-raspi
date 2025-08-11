@@ -37,10 +37,3 @@ class WebsocketServer:
     @staticmethod
     def Send(message):
         WebsocketServer.queue.put(message)
-
-if __name__ == "__main__":
-    WebsocketServer.Start("0.0.0.0", 9999)
-    while True:
-        message = input("Enter message to send: ")
-        WebsocketServer.Send(message)
-        print(message)
