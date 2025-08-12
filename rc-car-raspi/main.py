@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import time
+import sys
+import socket
 import RPi.GPIO as GPIO
 from I2C import I2C
 from PWM import PWM
@@ -8,12 +11,11 @@ from Data import Data
 from Servo import Servo
 from GrayscaleSensor import GrayscaleSensor
 from UltrasonicSensor import UltrasonicSensor
-import time
-import sys
-from websocket import WebsocketServer
+from Websocket import WebsocketServer
+from WebsocketCommandHandler import WebsocketCommandHandler
 
 class Main:
-    def Test(self):
+    def InitializeHardware(self):
         self.i2c = I2C()
         self.pwm = PWM(self.i2c)
         self.motorLeft = Motor(self.pwm, motorNumber=1)
@@ -23,7 +25,26 @@ class Main:
         self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
-        WebsocketServer.Start("0.0.0.0", 9999)
+        
+    def StartWebsocketServer(self):
+        websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
+        websocketServer = WebsocketServer(websocketCommandHandler)
+        websocketServer.Start("0.0.0.0", 9999)
+
+    def getIp(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("192.168.0.1", 1))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception as e:
+            return f"Fehler: {e}"
+
+
+    def Test(self):
+        self.InitializeHardware()
+        self.StartWebsocketServer()
 
         try:
             self.motorLeft.SetSpeedPercent(0)
@@ -92,9 +113,26 @@ class Main:
             GPIO.cleanup()
             self.i2c.Close()
 
-
     def run(self):
-        pass
+        try:
+            print(self.getIp())
+            self.InitializeHardware()
+            self.StartWebsocketServer()
+
+            while True:
+                time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        except KeyboardInterrupt:
+            print("Program terminated by user")
+
+        finally:
+            self.motorLeft.SetSpeedPercent(0)
+            self.motorRight.SetSpeedPercent(0)
+            GPIO.cleanup()
+            self.i2c.Close()
 
 if __name__ == '__main__':
     # Runs Tests when test is written behind main.py on the command line
