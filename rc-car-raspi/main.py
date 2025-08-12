@@ -115,6 +115,7 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
+            self.cameraStream.stop()
             GPIO.cleanup()
             self.i2c.Close()
 
@@ -123,12 +124,12 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
-            print("Start Websocket")
+            print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
-            print("Start Camera Stream")
+            print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
-            print("Everything is running. ")
+            print(f"\033[1;32mEverything is running.\033[0m")
 
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
@@ -142,7 +143,7 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.cameraStream.stop()  
+            self.cameraStream.Stop()  
             GPIO.cleanup()
             self.i2c.Close()
 

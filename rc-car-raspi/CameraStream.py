@@ -13,8 +13,14 @@ class CameraStream(threading.Thread):
         self.camera = Picamera2()
         self.SetupCamera()
         self.SetupRoutes()
+    
+    def run(self):
+        # This method is automatically called when the thread is started.
+        # It launches the Flask web server, which serves the video stream.
+        self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False, threaded=True)
 
     def SetupCamera(self):
+        # Configures the camera resolution, format, and frame rate, and starts the camera.
         config = self.camera.create_video_configuration(
             main={"size": (640, 480), "format": "RGB888"},  
             controls={"FrameRate": 20}
@@ -23,11 +29,13 @@ class CameraStream(threading.Thread):
         self.camera.start()
 
     def SetupRoutes(self):
+        # Sets up the Flask route to serve the video feed.
         @self.app.route('/')
         def videoFeed():
             return Response(self.GenerateFrames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def GenerateFrames(self):
+        # Continuously captures frames from the camera, encodes them as JPEG, and yields them.
         while True:
             # Capture a frame from the camera
             frame = self.camera.capture_array()
@@ -42,10 +50,7 @@ class CameraStream(threading.Thread):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
 
-    def run(self):
-        # Start the Flask web server
-        self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False, threaded=True)
-
-    def stop(self):
+    def Stop(self):
+        # Stops and closes the camera.
         self.camera.stop()
         self.camera.close()
