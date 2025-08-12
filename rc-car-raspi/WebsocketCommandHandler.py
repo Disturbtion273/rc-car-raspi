@@ -31,5 +31,5 @@ class WebsocketCommandHandler:
         # Warn about unknown keys
         knownKeys = {"speed", "steering", "tilt", "pan"}
         for key in data.keys():
-            if key not in known_keys:
+            if key not in knownKeys:
                 print(f"⚠ Unknown command key: '{key}'")
