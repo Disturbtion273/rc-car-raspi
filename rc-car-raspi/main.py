@@ -13,6 +13,7 @@ from GrayscaleSensor import GrayscaleSensor
 from UltrasonicSensor import UltrasonicSensor
 from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
+from CameraStream import CameraStream
 
 class Main:
     def InitializeHardware(self):
@@ -25,6 +26,10 @@ class Main:
         self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
+
+        self.servoSteering.SetAnglePercent(50)  
+        self.servoTilt.SetAnglePercent(50)      
+        self.servoPan.SetAnglePercent(50)       
         
     def StartWebsocketServer(self):
         websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
@@ -115,9 +120,15 @@ class Main:
 
     def run(self):
         try:
-            print(self.getIp())
+            ip = self.getIp()
+            print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
+            print("Start Websocket")
             self.StartWebsocketServer()
+            print("Start Camera Stream")
+            self.cameraStream = CameraStream()
+            self.cameraStream.start()  
+            print("Everything is running. ")
 
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
@@ -131,6 +142,7 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
+            self.cameraStream.stop()  
             GPIO.cleanup()
             self.i2c.Close()
 
