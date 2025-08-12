@@ -1,5 +1,4 @@
 import threading
-import asyncio
 from queue import Queue
 from websockets.sync.server import serve
 
@@ -18,15 +17,21 @@ class WebsocketServer:
     def MessageHandler(self, websocket):
         def Send():
             while True:
-                if self.queue.empty():
-                    continue
-                queueItem = self.queue.get()
-                websocket.send(queueItem)
+                try:
+                    queueItem = self.queue.get()
+                    websocket.send(queueItem)
+                except Exception as e:
+                    print(f"Send-Error: {e}")
+                    break  
 
         threading.Thread(target=Send, daemon=True).start()
-        for message in websocket:
-            print(f"Received message: {message}")
-            self.commandHandler.handleMessage(message)
+
+        try:
+            for message in websocket:
+                print(f"Received message: {message}")
+                self.commandHandler.handleMessage(message)
+        except Exception as e:
+            print(f"Receive-Error: {e}")
 
     def Send(self, message):
         self.queue.put(message)
