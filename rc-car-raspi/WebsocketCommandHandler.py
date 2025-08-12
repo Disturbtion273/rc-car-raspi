@@ -8,29 +8,28 @@ class WebsocketCommandHandler:
         self.servoPan = servoPan
         self.servoSteering = servoSteering
 
-    async def handleMessage(self, message):
+    def handleMessage(self, message):
         try:
             data = json.loads(message)
         except json.JSONDecodeError:
             print("⚠ Invalid JSON received:", message)
             return
 
-        command = data.get("command")
-        value = data.get("value")
+        if "speed" in data:
+            self.motorLeft.SetSpeedPercent(data["speed"])
+            self.motorRight.SetSpeedPercent(data["speed"])
 
-        if command is None or value is None:
-            print("⚠ Error in Message:", data)
-            return
+        if "steering" in data:
+            self.servoSteering.SetAnglePercent(data["steering"])
 
-        match command:
-            case "drive":
-                self.motorLeft.SetSpeedPercent(value)
-                self.motorRight.SetSpeedPercent(value)
-            case "steering":
-                self.servoSteering.SetAnglePercent(value)
-            case "tilt":
-                self.servoTilt.SetAnglePercent(value)
-            case "pan":
-                self.servoPan.SetAnglePercent(value)
-            case _:
-                print(f"⚠ Unknown Command: {command}")
+        if "tilt" in data:
+            self.servoTilt.SetAnglePercent(data["tilt"])
+
+        if "pan" in data:
+            self.servoPan.SetAnglePercent(data["pan"])
+
+        # Warn about unknown keys
+        knownKeys = {"speed", "steering", "tilt", "pan"}
+        for key in data.keys():
+            if key not in known_keys:
+                print(f"⚠ Unknown command key: '{key}'")

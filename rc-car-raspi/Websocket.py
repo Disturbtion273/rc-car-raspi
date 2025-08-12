@@ -15,7 +15,7 @@ class WebsocketServer:
         with serve(self.MessageHandler, host, port) as server:
             server.serve_forever()
 
-    async def MessageHandler(self, websocket):
+    def MessageHandler(self, websocket):
         def Send():
             while True:
                 if self.queue.empty():
@@ -24,10 +24,9 @@ class WebsocketServer:
                 websocket.send(queueItem)
 
         threading.Thread(target=Send, daemon=True).start()
-        loop = asyncio.get_event_loop()
-        async for message in websocket:
+        for message in websocket:
             print(f"Received message: {message}")
-            await self.commandHandler.handleMessage(message)
+            self.commandHandler.handleMessage(message)
 
     def Send(self, message):
         self.queue.put(message)

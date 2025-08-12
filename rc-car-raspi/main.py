@@ -31,6 +31,17 @@ class Main:
         websocketServer = WebsocketServer(websocketCommandHandler)
         websocketServer.Start("0.0.0.0", 9999)
 
+    def getIp(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("192.168.0.1", 1))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception as e:
+            return f"Fehler: {e}"
+
+
     def Test(self):
         self.InitializeHardware()
         self.StartWebsocketServer()
@@ -104,10 +115,7 @@ class Main:
 
     def run(self):
         try:
-            hostname = socket.gethostname()
-            ipAdress = socket.gethostbyname(hostname)
-            print(f"Hostname: {hostname}, IP-Adresse: {ipAdress}")
-
+            print(self.getIp())
             self.InitializeHardware()
             self.StartWebsocketServer()
 
