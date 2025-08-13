@@ -28,8 +28,8 @@ class Data:
 
     # Servo Ranges
     ServoRanges = {
-        "0": {"min": 10, "max": 120},  # Range for servo pin 0
-        "1": {"min": 10, "max": 140},  # Range for servo pin 1
+        "0": {"min": 50, "max": 105},  # Range for servo pin 0
+        "1": {"min": 35, "max": 140},  # Range for servo pin 1
         "2": {"min": 50, "max": 120},  # Range for servo pin 2
     }
 
