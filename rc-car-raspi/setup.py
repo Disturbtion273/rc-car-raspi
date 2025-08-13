@@ -7,6 +7,8 @@ required_packages = [
     "picamera2",
     "RPI.GPIO",
     "websockets",
+    "flask",
+    "cv2",
 ]
 
 def install_packages(packages):
