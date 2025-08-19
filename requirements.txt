@@ -1,0 +1,6 @@
+smbus2
+picamera2
+RPi.GPIO
+websockets
+flask
+opencv-python
