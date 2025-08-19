@@ -8,7 +8,7 @@ required_packages = [
     "RPI.GPIO",
     "websockets",
     "flask",
-    "cv2",
+    "opencv-python",
 ]
 
 def install_packages(packages):
