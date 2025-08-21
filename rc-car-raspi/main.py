@@ -3,7 +3,6 @@
 import time
 import sys
 import socket
-import RPi.GPIO as GPIO
 from I2C import I2C
 from PWM import PWM
 from Motor import Motor
@@ -115,8 +114,9 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
+            self.motorLeft.Cleanup()
+            self.motorRight.Cleanup()
             self.cameraStream.stop()
-            GPIO.cleanup()
             self.i2c.Close()
 
     def run(self):
@@ -143,8 +143,9 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.cameraStream.Stop()  
-            GPIO.cleanup()
+            self.motorLeft.Cleanup()
+            self.motorRight.Cleanup()
+            self.cameraStream.stop()
             self.i2c.Close()
 
 if __name__ == '__main__':

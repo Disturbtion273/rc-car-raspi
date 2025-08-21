@@ -1,4 +1,4 @@
-import RPi.GPIO as GPIO
+import lgpio
 from Data import Data
 
 class Motor:
@@ -8,8 +8,8 @@ class Motor:
         self.pwmChannel = Data.Motors["Left"] if motorNumber == 1 else Data.Motors["Right"]
         self.motorNumber = motorNumber
 
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.directionPin, GPIO.OUT)
+        self.chip = lgpio.gpiochip_open(0)
+        lgpio.gpio_claim_output(self.chip, self.directionPin)
 
     def SetDirection(self,forward=True):
         """
@@ -19,9 +19,9 @@ class Motor:
         :type forward: bool
         """
         if self.motorNumber == 1:
-            GPIO.output(self.directionPin, GPIO.LOW if forward else GPIO.HIGH)
+            lgpio.gpio_write(self.chip, self.directionPin, 0 if forward else 1)
         elif self.motorNumber == 2:
-            GPIO.output(self.directionPin, GPIO.HIGH if forward else GPIO.LOW)
+            lgpio.gpio_write(self.chip, self.directionPin, 1 if forward else 0)
 
     def SetSpeedPercent(self, speedPercent):
         """
@@ -54,3 +54,9 @@ class Motor:
         Stop the motor by setting PWM to 0.
         """
         self.PWM.SetMotorPwm(self.pwmChannel, 0)
+
+    def Cleanup(self):
+        """
+        Release GPIO resources.s
+        """
+        lgpio.gpiochip_close(self.chip)
