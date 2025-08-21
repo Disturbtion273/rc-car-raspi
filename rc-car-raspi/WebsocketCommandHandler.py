@@ -22,14 +22,14 @@ class WebsocketCommandHandler:
         if "steering" in data:
             self.servoSteering.SetAnglePercent(data["steering"])
 
-        if "tilt" in data:
-            self.servoTilt.SetAnglePercent(data["tilt"])
+        if "tilt" in data and "tiltSpeed" in data:
+            self.servoTilt.SetMovement(data["tilt"], data["tiltSpeed"])
 
-        if "pan" in data:
-            self.servoPan.SetAnglePercent(data["pan"])
+        if "pan" in data and "panSpeed" in data:
+            self.servoPan.SetMovement(data["pan"],data["panSpeed"])
 
         # Warn about unknown keys
-        knownKeys = {"speed", "steering", "tilt", "pan"}
+        knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed"}
         for key in data.keys():
             if key not in knownKeys:
                 print(f"⚠ Unknown command key: '{key}'")
