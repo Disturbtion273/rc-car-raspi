@@ -13,6 +13,7 @@ from UltrasonicSensor import UltrasonicSensor
 from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
+from LineFollower import LineFollower
 
 class Main:
     def InitializeHardware(self):
@@ -25,6 +26,8 @@ class Main:
         self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
+
+        self.lineFollwer = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscale_sensor=self.grayscaleSensor,steering=self.servoSteering)
 
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
@@ -114,8 +117,7 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.motorLeft.Cleanup()
-            self.motorRight.Cleanup()
+            Motor.CleanupAll()  
             self.cameraStream.stop()
             self.i2c.Close()
 
@@ -124,13 +126,15 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
+            #self.lineFollwer.Start()  
+            
             print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
             print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
             print(f"\033[1;32mEverything is running.\033[0m")
-
+            
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
@@ -141,11 +145,11 @@ class Main:
             print("Program terminated by user")
 
         finally:
+            self.lineFollwer.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.motorLeft.Cleanup()
-            self.motorRight.Cleanup()
-            self.cameraStream.stop()
+            Motor.CleanupAll()  
+            #self.cameraStream.stop()
             self.i2c.Close()
 
 if __name__ == '__main__':
