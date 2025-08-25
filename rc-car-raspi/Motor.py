@@ -54,7 +54,7 @@ class Motor:
         Stop the motor by setting PWM to 0.
         """
         self.PWM.SetMotorPwm(self.pwmChannel, 0)
-
+        
     def Cleanup(self):
         """
         Release GPIO resources.s

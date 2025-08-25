@@ -13,6 +13,7 @@ from UltrasonicSensor import UltrasonicSensor
 from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
+from LineFollower import LineFollower
 
 class Main:
     def InitializeHardware(self):
@@ -25,6 +26,8 @@ class Main:
         self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
+
+        self.lineFollwer = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscaleSensor=self.grayscaleSensor,steering=self.servoSteering)
 
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
@@ -114,9 +117,27 @@ class Main:
         finally:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.motorLeft.Cleanup()
+            self.motorLeft.Cleanup()  
             self.motorRight.Cleanup()
             self.cameraStream.stop()
+            self.i2c.Close()
+
+    def Line(self):
+        try:
+            self.InitializeHardware()
+            print("Line Follower startet...")
+            self.lineFollwer.Start()  
+            while True:
+                time.sleep(1) 
+
+        except KeyboardInterrupt:
+            print("Beendet durch Benutzer")
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
+        finally:
+            self.lineFollwer.Stop()
+            self.motorLeft.SetSpeedPercent(0)
+            self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
 
     def run(self):
@@ -124,13 +145,13 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
+
             print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
             print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
             print(f"\033[1;32mEverything is running.\033[0m")
-
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
@@ -141,16 +162,17 @@ class Main:
             print("Program terminated by user")
 
         finally:
+            self.lineFollwer.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.motorLeft.Cleanup()
-            self.motorRight.Cleanup()
-            self.cameraStream.stop()
+            self.cameraStream.Stop()
             self.i2c.Close()
 
 if __name__ == '__main__':
     # Runs Tests when test is written behind main.py on the command line
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
         Main().Test()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'line':
+        Main().Line()
     else:
         Main().run()
