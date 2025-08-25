@@ -2,69 +2,78 @@ import time
 import threading
 
 class LineFollower:
-    def __init__(self, motor1, motor2, grayscale_sensor, steering):
+    def __init__(self, motor1, motor2, grayscaleSensor, steering):
         self.motor1 = motor1
         self.motor2 = motor2
-        self.sensor = grayscale_sensor
+        self.sensor = grayscaleSensor
         self.steering = steering
-        self.speed = 50  # Base speed
         self.running = False
         self.thread = None
 
-    def Steering(self, value):
+        # Control parameters
+        self.kp = 1.2  # Proportional gain for steering angle
+        self.maxSteering = 100
+        self.minSteering = 0
+        self.maxSpeed = 65
+        self.minSpeed = 20
+
+    def SetSteering(self, value):
         self.steering.SetAnglePercent(value)
 
     def ReadLinePosition(self):
+        # Read grayscale values from the 3 sensors
         readings = [
             self.sensor.ReadGrayscalePercent(1),
             self.sensor.ReadGrayscalePercent(2),
             self.sensor.ReadGrayscalePercent(3)
         ]
 
-        # Normalize to 0-1
+        # Normalize to 0–1
         lineValues = [r / 100.0 for r in readings]  
-        # Weighted sum: left=0, middle=50, right=100
-        # maps sensor strengths to a single position (0=left, 100=right)
         position = (lineValues[0] * 0 + lineValues[1] * 50 + lineValues[2] * 100)
         total = sum(lineValues)
 
         if total == 0:
-            return None  # no valid line detected, do nothing
+            return None  # No line detected
 
         position /= total
-        # Clamp to 0–100
         return max(0, min(100, position))
 
     def FollowLine(self):
-        position = self.ReadLinePosition() 
-        # Calculate deviation from center (50 = ideal center position)
-        deviation = position - 50  
+        position = self.ReadLinePosition()
+        if position is None:
+            # Line lost – stop or drive straight at minimum speed
+            self.motor1.SetSpeedPercent(self.minSpeed)
+            self.motor2.SetSpeedPercent(self.minSpeed)
+            return
 
-        steeringValue = 50 + deviation
-        steeringValue = max(0, min(100, steeringValue))  # Clamp to 0-100
-        self.Steering(steeringValue)
+        deviation = position - 50  # -50 (left) to +50 (right)
 
-        self.motor1.SetSpeedPercent(self.speed)
-        self.motor2.SetSpeedPercent(self.speed)
+        # Proportional steering control
+        steeringValue = 50 + self.kp * deviation
+        steeringValue = max(self.minSteering, min(self.maxSteering, steeringValue))
+        self.SetSteering(steeringValue)
+
+        # Speed control – reduce speed with higher deviation
+        error = abs(deviation)
+        speed = self.maxSpeed - (error / 50.0) * (self.maxSpeed - self.minSpeed)
+        speed = max(self.minSpeed, min(self.maxSpeed, speed))
+
+        self.motor1.SetSpeedPercent(speed)
+        self.motor2.SetSpeedPercent(speed)
 
     def Run(self):
         while self.running:
             self.FollowLine()
-            time.sleep(0.02)  
+            time.sleep(0.02)  # 20 ms delay between control updates
 
     def Start(self):
-        """
-        Starts line following 
-        """
         if not self.running:
             self.running = True
             self.thread = threading.Thread(target=self.Run)
             self.thread.start()
 
     def Stop(self):
-        """
-        Stops line following 
-        """
         self.running = False
         if self.thread:
             self.thread.join()

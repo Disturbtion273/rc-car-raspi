@@ -27,7 +27,7 @@ class Main:
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
 
-        self.lineFollwer = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscale_sensor=self.grayscaleSensor,steering=self.servoSteering)
+        self.lineFollwer = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscaleSensor=self.grayscaleSensor,steering=self.servoSteering)
 
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
@@ -126,15 +126,15 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
-            #self.lineFollwer.Start()  
-            
+            self.lineFollwer.Start()  
+            """
             print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
             print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
             print(f"\033[1;32mEverything is running.\033[0m")
-            
+            """
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
