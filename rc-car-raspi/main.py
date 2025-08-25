@@ -14,6 +14,8 @@ from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
 from LineFollower import LineFollower
+from YoloDetector import YoloDetector
+from AiCommandHandler import AiCommandHandler
 
 class Main:
     def InitializeHardware(self):
@@ -21,17 +23,18 @@ class Main:
         self.pwm = PWM(self.i2c)
         self.motorLeft = Motor(self.pwm, motorNumber=1)
         self.motorRight = Motor(self.pwm, motorNumber=2)
-        self.servoTilt = Servo(self.pwm, 0)
-        self.servoPan = Servo(self.pwm, 1)
+        self.servoTilt = Servo(self.pwm, 1)
+        self.servoPan = Servo(self.pwm, 0)
         self.servoSteering = Servo(self.pwm, 2)
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
+        self.yoloDetector = YoloDetector()
+        self.lineFollower = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscaleSensor=self.grayscaleSensor,steering=self.servoSteering)
 
-        self.lineFollwer = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscaleSensor=self.grayscaleSensor,steering=self.servoSteering)
-
+        self.aiCommandHandler = AiCommandHandler(self.motorLeft, self.motorRight, self.lineFollower, self.yoloDetector)
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
-        self.servoPan.SetAnglePercent(50)       
+        self.servoPan.SetAnglePercent(50)   
         
     def StartWebsocketServer(self):
         websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
@@ -126,7 +129,7 @@ class Main:
         try:
             self.InitializeHardware()
             print("Line Follower startet...")
-            self.lineFollwer.Start()  
+            self.lineFollower.Start()  
             while True:
                 time.sleep(1) 
 
@@ -135,7 +138,25 @@ class Main:
         except Exception as e:
             print(f"Ein Fehler ist aufgetreten: {e}")
         finally:
-            self.lineFollwer.Stop()
+            self.motorLeft.SetSpeedPercent(0)
+            self.motorRight.SetSpeedPercent(0)
+            self.i2c.Close()
+    def ai(self):
+        try:
+            print("AI Mode wird gestartet...")
+            self.InitializeHardware()
+            print("AI Mode startet...")
+            self.yoloDetector.start_camera()
+            self.yoloDetector.start_streaming() 
+            while True:
+                time.sleep(1) 
+
+        except KeyboardInterrupt:
+            print("Beendet durch Benutzer")
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
+        finally:
+            self.lineFollower.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
@@ -162,7 +183,7 @@ class Main:
             print("Program terminated by user")
 
         finally:
-            self.lineFollwer.Stop()
+            self.lineFollower.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             self.cameraStream.Stop()
@@ -174,5 +195,7 @@ if __name__ == '__main__':
         Main().Test()
     elif len(sys.argv) > 1 and sys.argv[1] == 'line':
         Main().Line()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'ai':
+        Main().ai()
     else:
         Main().run()

@@ -62,6 +62,9 @@ class LineFollower:
         self.motor1.SetSpeedPercent(speed)
         self.motor2.SetSpeedPercent(speed)
 
+    def SetMaxSpeed(self, speed):
+        self.maxSpeed = max(self.minSpeed, min(100, speed))
+
     def Run(self):
         while self.running:
             self.FollowLine()
