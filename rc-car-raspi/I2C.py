@@ -60,6 +60,60 @@ class I2C:
         value = (msb << 8) | lsb
         return value
 
+    def write(self, data):
+        """
+        Write data to the I2C device
+
+        :param data: Data to write (int, list, or bytearray)
+        :raises: ValueError if data type is unsupported
+        """
+        if isinstance(data, bytearray):
+            data_all = list(data)
+        elif isinstance(data, int):
+            if data == 0:
+                data_all = [0]
+            else:
+                data_all = []
+                while data > 0:
+                    data_all.append(data & 0xFF)
+                    data >>= 8
+        elif isinstance(data, list):
+            data_all = data
+        else:
+            raise ValueError(
+                f"write data must be int, list, or bytearray, not {type(data)}"
+            )
+
+        # Write data
+        if len(data_all) == 1:
+            data = data_all[0]
+            self._write_byte(data)
+        elif len(data_all) == 2:
+            reg = data_all[0]
+            data = data_all[1]
+            self._write_byte_data(reg, data)
+        elif len(data_all) == 3:
+            reg = data_all[0]
+            data = (data_all[2] << 8) + data_all[1]
+            self._write_word_data(reg, data)
+        else:
+            reg = data_all[0]
+            data = list(data_all[1:])
+            self._write_i2c_block_data(reg, data)
+
+    # Internal helper methods
+    def _write_byte(self, value):
+        self.bus.write_byte(self.address, value)
+
+    def _write_byte_data(self, register, value):
+        self.bus.write_byte_data(self.address, register, value)
+
+    def _write_word_data(self, register, value):
+        self.bus.write_word_data(self.address, register, value)
+
+    def _write_i2c_block_data(self, register, data):
+        self.bus.write_i2c_block_data(self.address, register, data)
+
     def Close(self):
         """
         Close the I2C bus connection to release system resources.

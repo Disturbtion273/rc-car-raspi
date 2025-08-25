@@ -14,6 +14,7 @@ from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
 from LineFollower import LineFollower
+from BatteryCharge import BatteryVoltage
 
 class Main:
     def InitializeHardware(self):
@@ -145,13 +146,17 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.InitializeHardware()
-
+            self.battery = BatteryVoltage(self.i2c)
+            print(self.battery.get_voltage())
+            print(self.battery.get_percentage())
+            """
             print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
             print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
             print(f"\033[1;32mEverything is running.\033[0m")
+            """
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
@@ -165,7 +170,7 @@ class Main:
             self.lineFollwer.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.cameraStream.Stop()
+            #self.cameraStream.Stop()
             self.i2c.Close()
 
 if __name__ == '__main__':
