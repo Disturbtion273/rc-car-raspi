@@ -5,3 +5,4 @@ riderModule.iml
 /_ReSharper.Caches/
 .idea
 .venv
+./rc-car-raspi/__pycache__/
