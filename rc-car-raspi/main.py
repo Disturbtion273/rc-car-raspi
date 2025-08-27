@@ -14,7 +14,7 @@ from Websocket import WebsocketServer
 from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
 from LineFollower import LineFollower
-from BatteryCharge import BatteryVoltage
+from Battery import Battery
 
 class Main:
     def InitializeHardware(self):
@@ -32,8 +32,9 @@ class Main:
 
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
-        self.servoPan.SetAnglePercent(50)       
-        
+        self.servoPan.SetAnglePercent(50)  
+        self.battery = Battery(self.i2c)
+
     def StartWebsocketServer(self):
         websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
         websocketServer = WebsocketServer(websocketCommandHandler)
@@ -145,18 +146,16 @@ class Main:
         try:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
-            self.InitializeHardware()
-            self.battery = BatteryVoltage(self.i2c)
-            print(self.battery.get_voltage())
-            print(self.battery.get_percentage())
-            """
+            self.InitializeHardware()            
             print(f"\033[1;32mStart Websocket\033[0m")
             self.StartWebsocketServer()
             print(f"\033[1;32mStart Camera Stream\033[0m")
             self.cameraStream = CameraStream()
             self.cameraStream.start()  
+            print(f"\033[1;32mStart Battery Monitoring\033[0m")
+            self.battery.StartMonitoring()
             print(f"\033[1;32mEverything is running.\033[0m")
-            """
+            
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
