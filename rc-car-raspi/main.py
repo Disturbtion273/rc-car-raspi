@@ -16,6 +16,7 @@ from CameraStream import CameraStream
 from LineFollower import LineFollower
 from YoloDetector import YoloDetector
 from AiCommandHandler import AiCommandHandler
+from Driving import Driving
 
 class Main:
     def InitializeHardware(self):
@@ -29,13 +30,14 @@ class Main:
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
         self.yoloDetector = YoloDetector()
-        self.lineFollower = LineFollower(motor1=self.motorLeft, motor2=self.motorRight,grayscaleSensor=self.grayscaleSensor,steering=self.servoSteering)
+        self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering)
+        self.lineFollower = LineFollower(driving=self.driving,grayscaleSensor=self.grayscaleSensor)
+        self.aiCommandHandler = AiCommandHandler(self.driving, self.yoloDetector)
 
-        self.aiCommandHandler = AiCommandHandler(self.motorLeft, self.motorRight, self.lineFollower, self.yoloDetector)
         self.servoSteering.SetAnglePercent(50)  
         self.servoTilt.SetAnglePercent(50)      
         self.servoPan.SetAnglePercent(50)   
-        
+
     def StartWebsocketServer(self):
         websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
         websocketServer = WebsocketServer(websocketCommandHandler)
@@ -141,13 +143,16 @@ class Main:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
-    def ai(self):
+
+    def Ai(self):
         try:
             print("AI Mode wird gestartet...")
             self.InitializeHardware()
             print("AI Mode startet...")
-            self.yoloDetector.start_camera()
-            self.yoloDetector.start_streaming() 
+            self.driving.SetSpeedPercent(50)
+            self.yoloDetector.StartCamera()
+            self.yoloDetector.StartStreaming() 
+            self.aiCommandHandler.Start()
             while True:
                 time.sleep(1) 
 
@@ -161,7 +166,7 @@ class Main:
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
 
-    def run(self):
+    def Run(self):
         try:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
@@ -196,6 +201,6 @@ if __name__ == '__main__':
     elif len(sys.argv) > 1 and sys.argv[1] == 'line':
         Main().Line()
     elif len(sys.argv) > 1 and sys.argv[1] == 'ai':
-        Main().ai()
+        Main().Ai()
     else:
-        Main().run()
+        Main().Run()

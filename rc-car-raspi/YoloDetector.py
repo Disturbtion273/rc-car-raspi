@@ -11,19 +11,19 @@ from picamera2 import Picamera2
 class YoloDetector:
     def __init__(self):
         # Konfiguration
-        self.model_path = 'my_model_11s_ncnn_model'
+        self.modelPath = './yolo_model/my_model_11s_ncnn_model'
         self.resolution = (1280, 720)
-        self.min_confidence = 0.5
-        self.bbox_colors = [
+        self.minConfidence = 0.5
+        self.bboxColors = [
             (164, 120, 87), (68, 148, 228), (93, 97, 209), (178, 182, 133),
             (88, 159, 106), (96, 202, 231), (159, 124, 168), (169, 162, 241),
             (98, 118, 150), (172, 176, 184)
         ]
 
         # Modell laden
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Modell nicht gefunden: {self.model_path}")
-        self.model = YOLO(self.model_path, task='detect')
+        if not os.path.exists(self.modelPath):
+            raise FileNotFoundError(f"Modell nicht gefunden: {self.modelPath}")
+        self.model = YOLO(self.modelPath, task='detect')
         self.labels = self.model.names
 
         # Kamera-Objekt, aber noch nicht initialisiert/startet
@@ -31,45 +31,45 @@ class YoloDetector:
 
         # Flask
         self.app = Flask(__name__)
-        self.frame_rate_buffer = []
-        self.fps_avg_len = 50
-        self.avg_fps = 0
-        self.streaming_thread = None
-        self._setup_routes()
+        self.frameRateBuffer = []
+        self.fpsAvgLen = 50
+        self.avgFps = 0
+        self.streamingThread = None
+        self.SetupRoutes()
 
-    def start_camera(self):
+    def StartCamera(self):
         if self.camera is None:
             self.camera = Picamera2()
-            camera_config = self.camera.create_video_configuration(
+            cameraConfig = self.camera.create_video_configuration(
                 main={"size": self.resolution, "format": "RGB888"},
                 controls={"FrameRate": 20}
             )
-            self.camera.configure(camera_config)
+            self.camera.configure(cameraConfig)
             self.camera.start()
             print("Kamera gestartet.")
         else:
             print("Kamera ist bereits gestartet.")
 
-    def _setup_routes(self):
+    def SetupRoutes(self):
         @self.app.route('/')
-        def video_feed():
-            return Response(self._generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        def VideoFeed():
+            return Response(self.GenerateFrames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    def start_streaming(self, host='0.0.0.0', port=8080):
-        def run_flask():
+    def StartStreaming(self, host='0.0.0.0', port=8080):
+        def RunFlask():
             self.app.run(host=host, port=port, debug=False, use_reloader=False, threaded=True)
 
-        self.streaming_thread = threading.Thread(target=run_flask, daemon=True)
-        self.streaming_thread.start()
+        self.streamingThread = threading.Thread(target=RunFlask, daemon=True)
+        self.streamingThread.start()
         print(f"Camera stream running at http://{host}:{port}/")
 
-    def _generate_frames(self):
+    def GenerateFrames(self):
         while True:
             if self.camera is None:
                 time.sleep(0.1)
                 continue
 
-            t_start = time.perf_counter()
+            tStart = time.perf_counter()
             frame = self.camera.capture_array()
 
             # YOLO Inferenz
@@ -78,58 +78,56 @@ class YoloDetector:
             for det in detections:
                 xyxy = det.xyxy.cpu().numpy().squeeze().astype(int)
                 xmin, ymin, xmax, ymax = xyxy
-                classidx = int(det.cls.item())
+                classIdx = int(det.cls.item())
                 conf = det.conf.item()
-                if conf > self.min_confidence:
-                    color = self.bbox_colors[classidx % len(self.bbox_colors)]
+                if conf > self.minConfidence:
+                    color = self.bboxColors[classIdx % len(self.bboxColors)]
                     cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 2)
-                    label = f"{self.labels[classidx]}: {int(conf * 100)}%"
-                    label_size, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-                    label_ymin = max(ymin, label_size[1] + 10)
-                    cv2.rectangle(frame, (xmin, label_ymin - label_size[1] - 10),
-                                  (xmin + label_size[0], label_ymin + baseLine - 10), color, cv2.FILLED)
-                    cv2.putText(frame, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+                    label = f"{self.labels[classIdx]}: {int(conf * 100)}%"
+                    labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+                    labelYmin = max(ymin, labelSize[1] + 10)
+                    cv2.rectangle(frame, (xmin, labelYmin - labelSize[1] - 10),
+                                  (xmin + labelSize[0], labelYmin + baseLine - 10), color, cv2.FILLED)
+                    cv2.putText(frame, label, (xmin, labelYmin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
             # FPS berechnen
-            t_stop = time.perf_counter()
-            frame_fps = 1 / (t_stop - t_start)
-            self.frame_rate_buffer.append(frame_fps)
-            if len(self.frame_rate_buffer) > self.fps_avg_len:
-                self.frame_rate_buffer.pop(0)
-            self.avg_fps = np.mean(self.frame_rate_buffer)
-            cv2.putText(frame, f"FPS: {self.avg_fps:.1f}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            tStop = time.perf_counter()
+            frameFps = 1 / (tStop - tStart)
+            self.frameRateBuffer.append(frameFps)
+            if len(self.frameRateBuffer) > self.fpsAvgLen:
+                self.frameRateBuffer.pop(0)
+            self.avgFps = np.mean(self.frameRateBuffer)
+            cv2.putText(frame, f"FPS: {self.avgFps:.1f}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
 
             # JPEG kodieren
             ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
             if not ret:
                 continue
-            frame_bytes = buffer.tobytes()
+            frameBytes = buffer.tobytes()
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
 
-    def detect_single_image(self):
+    def DetectSingleImage(self):
         if self.camera is None:
-            raise RuntimeError("Kamera ist nicht gestartet. Bitte zuerst start_camera() aufrufen.")
+            raise RuntimeError("Kamera ist nicht gestartet. Bitte zuerst StartCamera() aufrufen.")
         frame = self.camera.capture_array()
         results = self.model(frame, verbose=False)
         detections = results[0].boxes
 
-        result_list = []
+        resultList = []
         for det in detections:
-            classidx = int(det.cls.item())
+            classIdx = int(det.cls.item())
             conf = det.conf.item()
-            if conf > self.min_confidence:
-                label = self.labels[classidx]
-                result_list.append(f"{label} ({int(conf * 100)}%)")
+            if conf > self.minConfidence:
+                label = self.labels[classIdx]
+                resultList.append((label, conf))
 
-        return result_list
+        return resultList
 
-    def stop(self):
+    def Stop(self):
         if self.camera is not None:
             self.camera.stop()
             self.camera = None
             print("Kamera gestoppt.")
         else:
             print("Kamera war nicht gestartet.")
-
-    

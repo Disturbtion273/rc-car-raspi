@@ -2,11 +2,9 @@ import time
 import threading
 
 class LineFollower:
-    def __init__(self, motor1, motor2, grayscaleSensor, steering):
-        self.motor1 = motor1
-        self.motor2 = motor2
+    def __init__(self, driving, grayscaleSensor):
+        self.driving = driving
         self.sensor = grayscaleSensor
-        self.steering = steering
         self.running = False
         self.thread = None
 
@@ -18,7 +16,7 @@ class LineFollower:
         self.minSpeed = 20
 
     def SetSteering(self, value):
-        self.steering.SetAnglePercent(value)
+        self.driving.SetAnglePercent(value)
 
     def ReadLinePosition(self):
         # Read grayscale values from the 3 sensors
@@ -43,8 +41,7 @@ class LineFollower:
         position = self.ReadLinePosition()
         if position is None:
             # Line lost – stop or drive straight at minimum speed
-            self.motor1.SetSpeedPercent(self.minSpeed)
-            self.motor2.SetSpeedPercent(self.minSpeed)
+            self.driving.SetSpeedPercent(self.minSpeed)
             return
 
         deviation = position - 50  # -50 (left) to +50 (right)
@@ -52,18 +49,14 @@ class LineFollower:
         # Proportional steering control
         steeringValue = 50 + self.kp * deviation
         steeringValue = max(self.minSteering, min(self.maxSteering, steeringValue))
-        self.SetSteering(steeringValue)
+        self.driving.steeringPercent(steeringValue)
 
         # Speed control – reduce speed with higher deviation
         error = abs(deviation)
         speed = self.maxSpeed - (error / 50.0) * (self.maxSpeed - self.minSpeed)
         speed = max(self.minSpeed, min(self.maxSpeed, speed))
 
-        self.motor1.SetSpeedPercent(speed)
-        self.motor2.SetSpeedPercent(speed)
-
-    def SetMaxSpeed(self, speed):
-        self.maxSpeed = max(self.minSpeed, min(100, speed))
+        self.driving.driveSpeedPercent(speed)
 
     def Run(self):
         while self.running:
@@ -80,5 +73,4 @@ class LineFollower:
         self.running = False
         if self.thread:
             self.thread.join()
-        self.motor1.SetSpeedPercent(0)
-        self.motor2.SetSpeedPercent(0)
+        self.driving.SetSpeedPercent(0)
