@@ -38,6 +38,7 @@ class Data:
         "1": 0x17,  # ADC register address for sensor 0
         "2": 0x16,  # ADC register address for sensor 1
         "3": 0x15,  # ADC register address for sensor 2
+        "Battery": 0xA4 # Battery channel
     }
 
     # Ultrasonic Sensor 
