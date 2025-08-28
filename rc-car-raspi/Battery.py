@@ -1,7 +1,9 @@
 import time
 import threading
+import json
 from Data import Data
 from I2C import I2C
+from Websocket import WebsocketServer
 
 class Battery:
     """
@@ -9,12 +11,14 @@ class Battery:
     Runs a background thread to check battery status every 30 seconds.
     """
 
-    def __init__(self, i2c: I2C, updateInterval=30):
+    def __init__(self, i2c: I2C, websocketServer:WebsocketServer,updateInterval=30):
         self.i2c = i2c
         self.batteryRegister = 0x13  # Register für Batterie-ADC
         self.updateInterval = updateInterval
         self.isMonitoring = False
         self.thread = None
+        self.websocketServer = websocketServer
+        self.StartMonitoring()
 
     def GetVoltage(self):
         """
@@ -43,6 +47,10 @@ class Battery:
         while self.isMonitoring:
             percent, voltage = self.GetPercentage()
             print(f"Battery: {percent:.1f}% ({voltage:.2f} V)")
+            # Send battery status via WebSocket
+            percent = int(percent)
+            jsonCommand = json.dump({"battery": percent})
+            self.websocketServer.Send(jsonCommand)
             time.sleep(self.updateInterval)
 
     def StartMonitoring(self):
