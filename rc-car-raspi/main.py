@@ -39,7 +39,7 @@ class Main:
         self.servoPan.SetAnglePercent(50)   
 
     def StartWebsocketServer(self):
-        websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
+        websocketCommandHandler = WebsocketCommandHandler(self.driving, self.servoTilt, self.servoPan)
         websocketServer = WebsocketServer(websocketCommandHandler)
         websocketServer.Start("0.0.0.0", 9999)
 

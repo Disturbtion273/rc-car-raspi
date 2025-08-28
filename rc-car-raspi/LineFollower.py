@@ -16,7 +16,7 @@ class LineFollower:
         self.minSpeed = 20
 
     def SetSteering(self, value):
-        self.driving.SetAnglePercent(value)
+        self.driving.SetSteeringPercent(value)
 
     def ReadLinePosition(self):
         # Read grayscale values from the 3 sensors
@@ -49,7 +49,7 @@ class LineFollower:
         # Proportional steering control
         steeringValue = 50 + self.kp * deviation
         steeringValue = max(self.minSteering, min(self.maxSteering, steeringValue))
-        self.driving.steeringPercent(steeringValue)
+        self.driving.SetSteeringPercent(steeringValue)
 
         # Speed control – reduce speed with higher deviation
         error = abs(deviation)

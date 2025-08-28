@@ -1,12 +1,10 @@
 import json
 
 class WebsocketCommandHandler:
-    def __init__(self, motor1, motor2, servoTilt, servoPan, servoSteering):
-        self.motorLeft = motor1
-        self.motorRight = motor2
+    def __init__(self, driving, servoTilt, servoPan):
+        self.driving = driving
         self.servoTilt = servoTilt
         self.servoPan = servoPan
-        self.servoSteering = servoSteering
 
     def handleMessage(self, message):
         try:
@@ -16,11 +14,10 @@ class WebsocketCommandHandler:
             return
 
         if "speed" in data:
-            self.motorLeft.SetSpeedPercent(data["speed"])
-            self.motorRight.SetSpeedPercent(data["speed"])
+            self.driving.SetSpeedPercent(data["speed"])
 
         if "steering" in data:
-            self.servoSteering.SetAnglePercent(data["steering"])
+            self.driving.SetSteeringPercent(data["steering"])
 
         if "tilt" in data and "tiltSpeed" in data:
             self.servoTilt.SetMovement(data["tilt"], data["tiltSpeed"])
@@ -29,7 +26,7 @@ class WebsocketCommandHandler:
             self.servoPan.SetMovement(data["pan"],data["panSpeed"])
 
         if "cameraReset" in data:
-            if data["cameraReset"] == 1:
+            if data["cameraReset"]:
                 self.servoTilt.SetAnglePercent(50)
                 self.servoPan.SetAnglePercent(50)
 

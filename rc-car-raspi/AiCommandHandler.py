@@ -46,7 +46,8 @@ class AiCommandHandler:
 
     def DetectionConfirmer(self, detectedLabels):
         labelWithMaxProbability = max(detectedLabels, key=lambda x: x[1])[0]
-        if labelWithMaxProbability == self.lastDetectedLabel:
+        probabilityOfMaxLabel = max(detectedLabels, key=lambda x: x[1])[1]
+        if labelWithMaxProbability == self.lastDetectedLabel and probabilityOfMaxLabel >= self.threshold:
             self.currentNumberOfDetections += 1
         else:
             self.currentNumberOfDetections = 1

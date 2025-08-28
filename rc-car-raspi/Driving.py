@@ -13,7 +13,7 @@ class Driving:
         self.motor2.SetSpeedPercent(speed)
         self.currentSpeed = speed
 
-    def SteeringPercent(self, angle):    
+    def SetSteeringPercent(self, angle):    
         angle = min(max(angle, 0), 100)
         self.steering.SetAnglePercent(angle)
         self.currentSteering = angle
