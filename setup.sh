@@ -5,9 +5,8 @@ VENV_DIR="venv"
 
 echo "🔧 Installiere systemabhängige Pakete..."
 sudo apt update
-sudo apt install -y libcamera-apps libcamera-dev python3-libcamera python3-pip python3-venv
+sudo apt install -y libcamera-apps libcamera-dev python3-libcamera python3-pip python3-venv git
 
-# Optional: altes venv löschen
 if [ -d "$VENV_DIR" ]; then
     echo "🧹 Entferne altes virtuelles Environment..."
     rm -rf $VENV_DIR
@@ -25,8 +24,8 @@ pip install --upgrade pip
 echo "📦 Installiere NumPy <2 zuerst..."
 pip install "numpy<2"
 
-echo "📦 Installiere restliche Pakete..."
+echo "📦 Installiere Abhängigkeiten aus requirements.txt..."
 pip install -r requirements.txt
 
-echo "✅ Alle Pakete wurden erfolgreich installiert!"
-echo "💡 Um das Environment zu nutzen: source $VENV_DIR/bin/activate"
+echo "✅ Setup abgeschlossen. Aktiviere dein Environment mit:"
+echo "   source $VENV_DIR/bin/activate"

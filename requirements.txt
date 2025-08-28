@@ -5,4 +5,6 @@ websockets==15.0.1
 Flask==3.1.2
 opencv-python==4.8.0.74
 picamera2==0.3.30
-
+ultralytics==8.3.188
+# NCNN-Python Binding (kann nicht direkt via pip auf Pi funktionieren, muss ggf. gebaut werden)
+ncnn @ git+https://github.com/Tencent/ncnn.git#egg=ncnn

@@ -11,7 +11,7 @@ from picamera2 import Picamera2
 class YoloDetector:
     def __init__(self):
         # Konfiguration
-        self.modelPath = './yolo_model/my_model_11s_ncnn_model'
+        self.modelPath = './yolo_model/my_model_11s_ncnn_model' 
         self.resolution = (1280, 720)
         self.minConfidence = 0.5
         self.bboxColors = [
