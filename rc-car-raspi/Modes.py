@@ -36,9 +36,8 @@ class ManualMode(BaseMode):
 
     def Stop(self):
         print("Manual Mode stopping.")
-        self.websocketServer.Stop()
-        self.cameraStream.stop()
-        # Optionally reset servos or driving
+        self.cameraStream.Stop()
+        # Reset servos or driving
         self.servoTilt.SetAnglePercent(50)
         self.servoPan.SetAnglePercent(50)
         self.driving.SetSpeedPercent(0)
@@ -73,10 +72,24 @@ class SemiAiMode(BaseMode):
     def Stop(self):
         print("Semi-AI Mode stopping.")
 
+    def HandleMessage(self, message):
+        pass
+
 
 class FullAiMode(BaseMode):
+    def __init__(self, lineFollower, yoloDetector, aiCommandHandler):
+        self.lineFollower = lineFollower
+        self.yoloDetector = yoloDetector
+        self.aiCommandHandler = aiCommandHandler
+
     def Start(self):
         print("Full-AI Mode gestartet.")
+        self.lineFollower.Start()
+        self.yoloDetector.StartCamera()
+        self.aiCommandHandler.Start()
 
     def Stop(self):
         print("Full-AI Mode stopping.")
+
+    def HandleMessage(self, message):
+        pass

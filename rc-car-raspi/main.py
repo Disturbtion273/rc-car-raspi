@@ -64,7 +64,7 @@ class Main:
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode()
-        self.fullAiMode = FullAiMode()
+        self.fullAiMode = FullAiMode(self.lineFollower, self.yoloDetector, self.aiCommandHandler)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="None")
 
         # WebSocket handler
@@ -80,7 +80,6 @@ class Main:
             return ip
         except Exception as e:
             return f"Fehler: {e}"
-
 
     def Test(self):
         self.Initialize()
@@ -208,6 +207,8 @@ class Main:
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
             self.modeManager.SetMode("Manual")  
+            time.sleep(5)
+            self.modeManager.SetMode("FullAi")
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
@@ -219,9 +220,10 @@ class Main:
 
         finally:
             self.lineFollower.Stop()
+            self.cameraStream.Stop()
+            self.aiCommandHandler.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
-            self.cameraStream.Stop()
             self.i2c.Close()
             sys.stdout.flush()
             sys.stderr.flush()
