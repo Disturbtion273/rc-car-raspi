@@ -7,6 +7,9 @@ class WebsocketServer:
         self.commandHandler = WebsocketCommandHandler
         self.queue = Queue()
 
+    def SetCommandHandler(self, commandHandler):
+        self.commandHandler = commandHandler
+
     def Start(self, host, port):
         threading.Thread(target=self.Serve, args=(host, port), daemon=True).start()
 
