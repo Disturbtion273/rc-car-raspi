@@ -11,7 +11,7 @@ class Battery:
     Runs a background thread to check battery status every 30 seconds.
     """
 
-    def __init__(self, i2c: I2C, websocketServer:WebsocketServer,updateInterval=30):
+    def __init__(self, i2c: I2C, websocketServer:WebsocketServer,updateInterval=5):
         self.i2c = i2c
         self.batteryRegister = 0x13  # Register für Batterie-ADC
         self.updateInterval = updateInterval
@@ -49,7 +49,7 @@ class Battery:
             print(f"Battery: {percent:.1f}% ({voltage:.2f} V)")
             # Send battery status via WebSocket
             percent = int(percent)
-            jsonCommand = json.dump({"battery": percent})
+            jsonCommand = json.dumps({"battery": percent})
             self.websocketServer.Send(jsonCommand)
             time.sleep(self.updateInterval)
 
