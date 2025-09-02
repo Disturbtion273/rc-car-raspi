@@ -5,13 +5,13 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 from flask import Flask, Response
-from picamera2 import Picamera2
+from CameraManager import CameraManager
 
 
 class YoloDetector:
     def __init__(self):
         # Konfiguration
-        self.modelPath = './yolo_model/my_model_11s_ncnn_model' 
+        self.modelPath = './yolo_model/my_model_11s_ncnn_model'
         self.resolution = (1080, 800)
         self.minConfidence = 0.5
         self.bboxColors = [
@@ -26,29 +26,16 @@ class YoloDetector:
         self.model = YOLO(self.modelPath, task='detect')
         self.labels = self.model.names
 
-        # Kamera-Objekt, aber noch nicht initialisiert/startet
-        self.camera = None
+        # Singleton CameraManager verwenden
+        self.cameraManager = CameraManager()
 
-        # Flask
+        # Flask App und Streaming
         self.app = Flask(__name__)
         self.frameRateBuffer = []
         self.fpsAvgLen = 50
         self.avgFps = 0
         self.streamingThread = None
         self.SetupRoutes()
-
-    def StartCamera(self):
-        if self.camera is None:
-            self.camera = Picamera2()
-            cameraConfig = self.camera.create_video_configuration(
-                main={"size": self.resolution, "format": "RGB888"},
-                controls={"FrameRate": 20}
-            )
-            self.camera.configure(cameraConfig)
-            self.camera.start()
-            print("Kamera gestartet.")
-        else:
-            print("Kamera ist bereits gestartet.")
 
     def SetupRoutes(self):
         @self.app.route('/')
@@ -65,12 +52,12 @@ class YoloDetector:
 
     def GenerateFrames(self):
         while True:
-            if self.camera is None:
-                time.sleep(0.1)
+            frame = self.cameraManager.GetLatestFrame()
+            if frame is None:
+                time.sleep(0.01)
                 continue
 
             tStart = time.perf_counter()
-            frame = self.camera.capture_array()
 
             # YOLO Inferenz
             results = self.model(frame, verbose=False)
@@ -99,7 +86,6 @@ class YoloDetector:
             self.avgFps = np.mean(self.frameRateBuffer)
             cv2.putText(frame, f"FPS: {self.avgFps:.1f}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
 
-            # JPEG kodieren
             ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
             if not ret:
                 continue
@@ -108,9 +94,9 @@ class YoloDetector:
                    b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
 
     def DetectSingleImage(self):
-        if self.camera is None:
-            raise RuntimeError("Kamera ist nicht gestartet. Bitte zuerst StartCamera() aufrufen.")
-        frame = self.camera.capture_array()
+        frame = self.cameraManager.GetLatestFrame()
+        if frame is None:
+            print("Kein Kamerabild verfügbar.")
         results = self.model(frame, verbose=False)
         detections = results[0].boxes
 
@@ -124,11 +110,4 @@ class YoloDetector:
 
         return resultList
 
-    def Stop(self):
-        if self.camera is not None:
-            self.camera.stop()
-            self.camera = None
-            print("Kamera gestoppt.")
-        else:
-            print("Kamera war nicht gestartet.")
  

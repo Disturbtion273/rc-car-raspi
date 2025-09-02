@@ -12,15 +12,11 @@ class ModeManager:
         ModeManager.currentMode = self.mode
 
     def SetMode(self, mode):
-        print("mode is set")
         if mode in self.modes:
             if self.modeName != mode:
-                print("mode 2")
                 self.mode.Stop() if self.mode is not None else None
                 self.modeName = mode
-                print ("mode 2.5")
                 self.mode = self.modes[mode]
-                print("mode 3")
                 ModeManager.currentMode = self.mode
                 print(f"Mode is set to: {self.modeName}")
                 if self.mode is not None:

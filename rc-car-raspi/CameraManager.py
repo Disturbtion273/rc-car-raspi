@@ -3,7 +3,6 @@ import time
 import cv2
 from picamera2 import Picamera2
 
-
 class CameraManager:
     _instance = None
     _lock = threading.Lock()
@@ -34,7 +33,7 @@ class CameraManager:
                 try:
                     frame = self.camera.capture_array()
                     self.latestFrame = frame
-                    time.sleep(0.01)
+                    time.sleep(1/20)
                 except Exception as e:
                     print(f"[CameraManager] Fehler beim Aufnehmen des Frames: {e}")
                     time.sleep(0.5)
@@ -51,5 +50,5 @@ class CameraManager:
         self.camera.stop()
         self.camera.close()
         CameraManager._instance = None
-        print("Camera Stream stopped")
+        print("Camera stopped")
  

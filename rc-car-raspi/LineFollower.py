@@ -65,6 +65,7 @@ class LineFollower:
 
     def Start(self):
         if not self.running:
+            self.driving.SetSteeringPercent(50)
             self.running = True
             self.thread = threading.Thread(target=self.Run)
             self.thread.start()

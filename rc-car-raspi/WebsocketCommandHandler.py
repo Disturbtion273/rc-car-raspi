@@ -7,7 +7,6 @@ class WebsocketCommandHandler:
     def HandleMessage(self, message):
         try:
             data = json.loads(message)
-            print(data)
         except json.JSONDecodeError:
             print("⚠ Invalid JSON received:", message)
             return

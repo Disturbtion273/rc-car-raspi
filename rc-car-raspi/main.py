@@ -21,6 +21,7 @@ from AiCommandHandler import AiCommandHandler
 from Driving import Driving
 from ModeManager import ModeManager
 from Modes import ManualMode, SemiAiMode, FullAiMode
+from CameraManager import CameraManager
 
 
 class Main:
@@ -73,6 +74,9 @@ class Main:
         # WebSocket handler
         self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
+
+        #Camera Manager Singleton
+        self.cameraManager = CameraManager()
 
 
     def getIp(self):
@@ -185,10 +189,8 @@ class Main:
             print("AI Mode wird gestartet...")
             self.Initialize()
             print("AI Mode startet...")
-            self.driving.SetSpeedPercent(50)
-            self.yoloDetector.StartCamera()
-            self.yoloDetector.StartStreaming() 
-            self.aiCommandHandler.Start()
+            self.yoloDetector.StartStreaming()
+            self.modeManager.SetMode("automatic")
             while True:
                 time.sleep(1) 
 
@@ -222,11 +224,11 @@ class Main:
 
         finally:
             self.lineFollower.Stop()
-            self.cameraStream.Stop()
             self.aiCommandHandler.Stop()
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
+            self.cameraManager.Stop()
             sys.stdout.flush()
             sys.stderr.flush()
 

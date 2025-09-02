@@ -14,7 +14,6 @@ class ManualMode():
 
     def Stop(self):
         print("Manual Mode stopping.")
-        self.cameraStream.Stop()
         # Reset servos or driving
         self.servoTilt.SetAnglePercent(50)
         self.servoPan.SetAnglePercent(50)
@@ -63,7 +62,6 @@ class FullAiMode():
     def Start(self):
         print("Full-AI Mode gestartet.")
         self.lineFollower.Start()
-        self.yoloDetector.StartCamera()
         self.aiCommandHandler.Start()
 
     def Stop(self):
