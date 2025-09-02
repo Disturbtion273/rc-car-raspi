@@ -1,20 +1,27 @@
 class ModeManager:
-    def __init__(self, manualMode, semiAiMode, fullAiMode, mode="None"):
+    currentMode = None
+    def __init__(self, manualMode, semiAiMode, fullAiMode, mode="none"):
         self.modes = {
-            "None": None,
-            "Manual": manualMode,
-            "SemiAi": semiAiMode,
-            "FullAi": fullAiMode
+            "none": None,
+            "manual": manualMode,
+            "semiautomatic": semiAiMode,
+            "automatic": fullAiMode
         }
         self.modeName = mode
         self.mode = self.modes[mode]
+        ModeManager.currentMode = self.mode
 
     def SetMode(self, mode):
+        print("mode is set")
         if mode in self.modes:
             if self.modeName != mode:
+                print("mode 2")
                 self.mode.Stop() if self.mode is not None else None
                 self.modeName = mode
+                print ("mode 2.5")
                 self.mode = self.modes[mode]
+                print("mode 3")
+                ModeManager.currentMode = self.mode
                 print(f"Mode is set to: {self.modeName}")
                 if self.mode is not None:
                     self.mode.Start()
@@ -24,7 +31,8 @@ class ModeManager:
             print(f"Invalid mode: {mode}. Available modes: {list(self.modes.keys())}")
 
     def HandleMessage(self, message):
+        if "drivingMode" in message:
+            self.SetMode(message["drivingMode"])
         if self.mode is not None:
             self.mode.HandleMessage(message)
-        else:
-            print("No mode selected to handle the message.")
+ 

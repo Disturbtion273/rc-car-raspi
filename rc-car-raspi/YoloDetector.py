@@ -12,7 +12,7 @@ class YoloDetector:
     def __init__(self):
         # Konfiguration
         self.modelPath = './yolo_model/my_model_11s_ncnn_model' 
-        self.resolution = (1280, 720)
+        self.resolution = (1080, 800)
         self.minConfidence = 0.5
         self.bboxColors = [
             (164, 120, 87), (68, 148, 228), (93, 97, 209), (178, 182, 133),
@@ -131,3 +131,4 @@ class YoloDetector:
             print("Kamera gestoppt.")
         else:
             print("Kamera war nicht gestartet.")
+ 

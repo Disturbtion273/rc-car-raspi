@@ -12,7 +12,7 @@ class LineFollower:
         self.kp = 1.2  # Proportional gain for steering angle
         self.maxSteering = 100
         self.minSteering = 0
-        self.maxSpeed = 30
+        self.maxSpeed = 50
         self.minSpeed = 20
 
     def SetSteering(self, value):
@@ -74,3 +74,4 @@ class LineFollower:
         if self.thread:
             self.thread.join()
         self.driving.SetSpeedPercent(0)
+ 

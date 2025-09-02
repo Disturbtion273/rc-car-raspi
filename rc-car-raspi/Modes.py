@@ -1,27 +1,6 @@
 import json
 
-class BaseMode:
-    def __init__(self):
-        pass
-
-    def Start(self):
-        """Method to be overridden by subclasses to start the mode."""
-        raise NotImplementedError("Start method must be implemented by the subclass.")
-
-    def Stop(self):
-        """Method to be overridden by subclasses to stop the mode."""
-        raise NotImplementedError("Stop method must be implemented by the subclass.")
-
-    def jsonToData(self, message):
-        """Converts a JSON string to a Python dictionary. Returns None if invalid."""
-        try:
-            return json.loads(message)
-        except json.JSONDecodeError:
-            print("⚠ Invalid JSON received:", message)
-            return None
-
-
-class ManualMode(BaseMode):
+class ManualMode():
     def __init__(self, websocketServer, cameraStream, driving, servoTilt, servoPan):
         self.websocketServer = websocketServer
         self.cameraStream = cameraStream
@@ -31,7 +10,6 @@ class ManualMode(BaseMode):
 
     def Start(self):
         print("Manual Mode starts.")
-        self.websocketServer.Start("0.0.0.0", 9999)
         self.cameraStream.start()
 
     def Stop(self):
@@ -44,7 +22,7 @@ class ManualMode(BaseMode):
         self.driving.SetSteeringPercent(0)
 
     def HandleMessage(self, message):
-        data = self.jsonToData(message)
+        data = message
         if not data:
             return
 
@@ -65,7 +43,7 @@ class ManualMode(BaseMode):
             self.servoPan.SetAnglePercent(50)
 
 
-class SemiAiMode(BaseMode):
+class SemiAiMode():
     def Start(self):
         print("Semi-AI Mode gestartet.")
 
@@ -76,7 +54,7 @@ class SemiAiMode(BaseMode):
         pass
 
 
-class FullAiMode(BaseMode):
+class FullAiMode():
     def __init__(self, lineFollower, yoloDetector, aiCommandHandler):
         self.lineFollower = lineFollower
         self.yoloDetector = yoloDetector
@@ -93,3 +71,4 @@ class FullAiMode(BaseMode):
 
     def HandleMessage(self, message):
         pass
+ 

@@ -45,11 +45,6 @@ class Main:
         # AI / Computer Vision
         self.yoloDetector = YoloDetector()
 
-        # Driving logic
-        self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering)
-        self.lineFollower = LineFollower(driving=self.driving, grayscaleSensor=self.grayscaleSensor)
-        self.aiCommandHandler = AiCommandHandler(self.driving, self.yoloDetector)
-
         # Camera
         self.cameraStream = CameraStream()
 
@@ -60,16 +55,25 @@ class Main:
 
         # WebSocket server (placeholder for handler)
         self.websocketServer = WebsocketServer(None)
+        self.websocketServer.Start(host='0.0.0.0', port=9999)
+
+        # Driving logic
+        self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering)
+        self.lineFollower = LineFollower(driving=self.driving, grayscaleSensor=self.grayscaleSensor)
+
+        # AI Command Handler (needs to be created before fullAiMode)
+        self.aiCommandHandler = AiCommandHandler(self.driving, self.yoloDetector, self.websocketServer)
 
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode()
         self.fullAiMode = FullAiMode(self.lineFollower, self.yoloDetector, self.aiCommandHandler)
-        self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="None")
+        self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
         self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
+
 
     def getIp(self):
         try:
@@ -206,9 +210,7 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
-            self.modeManager.SetMode("Manual")  
-            time.sleep(5)
-            self.modeManager.SetMode("FullAi")
+            self.modeManager.SetMode("manual")  
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 

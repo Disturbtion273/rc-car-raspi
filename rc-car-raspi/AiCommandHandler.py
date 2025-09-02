@@ -1,21 +1,30 @@
 import threading
 import time
+import ModeManager
+import json
 
 class AiCommandHandler:
-    def __init__(self, driving, yoloDetector):
+    def __init__(self, driving, yoloDetector, websocketServer):
         self.driving = driving
         self.yoloDetector = yoloDetector
+        self.websocketServer = websocketServer
 
         self._running = False
         self._detect_thread = None
 
-        self.threshold = 0.7  # Confidence threshold for detections
+        self.threshold = 0.6  # Confidence threshold for detections
         self.fps = 3 #Dections per second
-        self.timeOfDetection = 2 # seconds neeed to confirm detection
+        self.timeOfDetection = 1 # seconds neeed to confirm detection
 
         self.currentNumberOfDetections = 0
         self.needNumberOfDetections = self.fps * self.timeOfDetection
         self.lastDetectedLabel = None
+
+        # High confidence parameters  
+        self.highConfidenceThreshold = 0.9
+        self.needNumberOfHighConfidenceDetections = 2
+        self.currentNumberOfHighConfidenceDetections = 0
+
 
     def Start(self):
         if self._running:
@@ -45,30 +54,62 @@ class AiCommandHandler:
             time.sleep(1/self.fps)
 
     def DetectionConfirmer(self, detectedLabels):
-        labelWithMaxProbability = max(detectedLabels, key=lambda x: x[1])[0]
-        probabilityOfMaxLabel = max(detectedLabels, key=lambda x: x[1])[1]
-        if labelWithMaxProbability == self.lastDetectedLabel and probabilityOfMaxLabel >= self.threshold:
-            self.currentNumberOfDetections += 1
-        else:
-            self.currentNumberOfDetections = 1
-            self.lastDetectedLabel = labelWithMaxProbability
+        labelWithMaxProbability, probability = max(detectedLabels, key=lambda x: x[1])
 
-        if self.currentNumberOfDetections >= self.needNumberOfDetections:
+        if labelWithMaxProbability == self.lastDetectedLabel:
+            if probability >= self.threshold:
+                self.currentNumberOfDetections += 1
+            else:
+                self.currentNumberOfDetections = 0
+
+            if probability >= self.highConfidenceThreshold:
+                self.currentNumberOfHighConfidenceDetections += 1
+            else:
+                self.currentNumberOfHighConfidenceDetections = 0
+        else:
+            self.lastDetectedLabel = labelWithMaxProbability
+            self.currentNumberOfDetections =  0 
+            self.currentNumberOfHighConfidenceDetections = 0
+
+        if self.currentNumberOfDetections >= self.needNumberOfDetections or self.currentNumberOfHighConfidenceDetections >= 2:
             self.HandleDetection(labelWithMaxProbability)
             self.currentNumberOfDetections = 0
+            self.currentNumberOfHighConfidenceDetections = 0
             self.lastDetectedLabel = None
+
+    def SendDetectedLabel(self, label):
+        if self.websocketServer:
+            message = json.dumps({"label": label})
+            self.websocketServer.Send(message)
 
     def HandleDetection(self, label):
         if label == "unbegrenzt":
-            self.driving.SetMaxSpeedPercent(100)
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.driving.SetMaxSpeedPercent(50)
+            else:
+                self.driving.SetMaxSpeedPercent(100)
+                self.SendDetectedLabel(label)
             print("Unbegrenzt erkannt")
 
         elif label == "fuenfzig":
-            self.driving.SetMaxSpeedPercent(50)
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.driving.SetMaxSpeedPercent(25)
+            else:
+                self.driving.SetMaxSpeedPercent(50)
+            self.SendDetectedLabel(label)
             print("50 erkannt")
+
+        elif label == "dreissig":
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.driving.SetMaxSpeedPercent(15)
+            else:
+                self.driving.SetMaxSpeedPercent(30)
+            self.SendDetectedLabel(label)
+            print("30 erkannt")
 
         elif label == "achtung":
             print("Achtung erkannt")
+            self.SendDetectedLabel(label)
             saveSpeedForReset = self.driving.currentSpeed
             self.driving.SetMaxSpeedPercent(self.driving.currentSpeed/2)
             def resetSpeed():
@@ -79,6 +120,7 @@ class AiCommandHandler:
 
         elif label =="stopp":
             print("Stop erkannt")
+            self.SendDetectedLabel(label)
             saveSpeedForReset = self.driving.currentSpeed
             self.driving.SetMaxSpeedPercent(0)
 
@@ -88,6 +130,14 @@ class AiCommandHandler:
 
             timer = threading.Timer(2.0, continueDriving)
             timer.start()
+
+        elif label == "sackgasse":
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.driving.SetSpeedPercent(0)
+                self.SendDetectedLabel(label)
+                print("Sackgasse erkannt")
+
     
 
     
+ 

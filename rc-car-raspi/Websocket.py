@@ -32,9 +32,10 @@ class WebsocketServer:
         try:
             for message in websocket:
                 print(f"Received message: {message}")
-                self.commandHandler.handleMessage(message)
+                self.commandHandler.HandleMessage(message)
         except Exception as e:
             print(f"Receive-Error: {e}")
 
     def Send(self, message):
         self.queue.put(message)
+ 
