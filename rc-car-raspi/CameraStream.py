@@ -32,14 +32,16 @@ class CameraStream(threading.Thread):
         while True:
             frame = self.cameraManager.GetLatestFrame()
             if frame is None:
-                time.sleep(0.01)
+                time.sleep(0.1)
                 continue
 
-            ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
+            ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 45])
             if not ret:
                 continue
 
             frameBytes = buffer.tobytes()
 
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
+
+            time.sleep(0.05)
