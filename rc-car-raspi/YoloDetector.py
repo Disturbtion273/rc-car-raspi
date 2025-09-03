@@ -97,6 +97,8 @@ class YoloDetector:
         frame = self.cameraManager.GetLatestFrame()
         if frame is None:
             print("Kein Kamerabild verfügbar.")
+           
+        frameHeight, frameWidth, _ = frame.shape
         results = self.model(frame, verbose=False)
         detections = results[0].boxes
 
@@ -105,9 +107,11 @@ class YoloDetector:
             classIdx = int(det.cls.item())
             conf = det.conf.item()
             if conf > self.minConfidence:
+                xyxy = det.xyxy.cpu().numpy().squeeze().astype(int)
+                xmin, ymin, xmax, ymax = xyxy
+                boxWidth = xmax - xmin
+                relSize = (boxWidth / frameWidth) * 100  # nur Breite relativ
                 label = self.labels[classIdx]
-                resultList.append((label, conf))
+                resultList.append((label, conf, relSize))
 
-        return resultList
-
- 
+        return resultList 

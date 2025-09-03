@@ -67,8 +67,8 @@ class Main:
 
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
-        self.semiAiMode = SemiAiMode()
-        self.fullAiMode = FullAiMode(self.lineFollower, self.yoloDetector, self.aiCommandHandler)
+        self.semiAiMode = SemiAiMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan, self.aiCommandHandler)
+        self.fullAiMode = FullAiMode(self.lineFollower, self.aiCommandHandler)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
@@ -242,3 +242,4 @@ if __name__ == '__main__':
         Main().Ai()
     else:
         Main().Run()
+ 

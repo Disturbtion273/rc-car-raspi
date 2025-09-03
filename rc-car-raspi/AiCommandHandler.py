@@ -25,6 +25,10 @@ class AiCommandHandler:
         self.needNumberOfHighConfidenceDetections = 2
         self.currentNumberOfHighConfidenceDetections = 0
 
+        self.detectedSign = None
+        self.isSignDetected = False
+        self.needSizeWidthPercent = 18
+
 
     def Start(self):
         if self._running:
@@ -54,7 +58,10 @@ class AiCommandHandler:
             time.sleep(1/self.fps)
 
     def DetectionConfirmer(self, detectedLabels):
-        labelWithMaxProbability, probability = max(detectedLabels, key=lambda x: x[1])
+        labelWithMaxProbability, probability, sizePercent = max(detectedLabels, key=lambda x: x[1])
+        print("Size" + str(sizePercent))
+
+        self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
 
         if labelWithMaxProbability == self.lastDetectedLabel:
             if probability >= self.threshold:
@@ -68,11 +75,12 @@ class AiCommandHandler:
                 self.currentNumberOfHighConfidenceDetections = 0
         else:
             self.lastDetectedLabel = labelWithMaxProbability
-            self.currentNumberOfDetections =  0 
+            self.currentNumberOfDetections =  0
             self.currentNumberOfHighConfidenceDetections = 0
 
         if self.currentNumberOfDetections >= self.needNumberOfDetections or self.currentNumberOfHighConfidenceDetections >= 2:
-            self.HandleDetection(labelWithMaxProbability)
+            self.SignDetection(labelWithMaxProbability)
+            self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
             self.currentNumberOfDetections = 0
             self.currentNumberOfHighConfidenceDetections = 0
             self.lastDetectedLabel = None
@@ -82,13 +90,23 @@ class AiCommandHandler:
             message = json.dumps({"label": label})
             self.websocketServer.Send(message)
 
+    def IsSignNearEnough(self, labelWithMaxProbability ,sizePercent):
+        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent and labelWithMaxProbability == self.detectedSign:
+            self.HandleDetection(self.detectedSign)
+            self.signDetected = False
+            self.detectedSign = None
+
+    def SignDetection(self, label):
+        print("Sign Detected")
+        self.isSignDetected = True
+        self.detectedSign = label
+
     def HandleDetection(self, label):
         if label == "unbegrenzt":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(50)
             else:
-                self.driving.SetMaxSpeedPercent(100)
-                self.SendDetectedLabel(label)
+                self.SetMaxSpeedPercent(100)
             print("Unbegrenzt erkannt")
 
         elif label == "fuenfzig":
@@ -96,7 +114,6 @@ class AiCommandHandler:
                 self.driving.SetMaxSpeedPercent(25)
             else:
                 self.driving.SetMaxSpeedPercent(50)
-            self.SendDetectedLabel(label)
             print("50 erkannt")
 
         elif label == "dreissig":
@@ -104,12 +121,10 @@ class AiCommandHandler:
                 self.driving.SetMaxSpeedPercent(15)
             else:
                 self.driving.SetMaxSpeedPercent(30)
-            self.SendDetectedLabel(label)
             print("30 erkannt")
 
         elif label == "achtung":
             print("Achtung erkannt")
-            self.SendDetectedLabel(label)
             saveSpeedForReset = self.driving.currentSpeed
             self.driving.SetMaxSpeedPercent(self.driving.currentSpeed/2)
             def resetSpeed():
@@ -120,7 +135,6 @@ class AiCommandHandler:
 
         elif label =="stopp":
             print("Stop erkannt")
-            self.SendDetectedLabel(label)
             saveSpeedForReset = self.driving.currentSpeed
             self.driving.SetMaxSpeedPercent(0)
 
@@ -134,10 +148,11 @@ class AiCommandHandler:
         elif label == "sackgasse":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetSpeedPercent(0)
-                self.SendDetectedLabel(label)
                 print("Sackgasse erkannt")
 
-    
+        self.SendDetectedLabel(label)
+
+
+   
 
     
- 

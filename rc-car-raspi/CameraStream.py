@@ -14,6 +14,12 @@ class CameraStream(threading.Thread):
         self.cameraManager = CameraManager()
         self.SetupRoutes()
 
+    def Start(self):
+        if not self.is_alive():
+            self.start()
+        else:
+            print("CameraStream läuft bereits.")
+
     def run(self):
         self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False, threaded=True)
 

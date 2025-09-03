@@ -10,7 +10,7 @@ class ManualMode():
 
     def Start(self):
         print("Manual Mode starts.")
-        self.cameraStream.start()
+        self.cameraStream.Start()
 
     def Stop(self):
         print("Manual Mode stopping.")
@@ -43,20 +43,47 @@ class ManualMode():
 
 
 class SemiAiMode():
+    def __init__(self, websocketServer, cameraStream, driving, servoTilt, servoPan, aiCommandHandler):
+        self.websocketServer = websocketServer
+        self.cameraStream = cameraStream
+        self.driving = driving
+        self.servoTilt = servoTilt
+        self.servoPan = servoPan
+        self.aiCommandHandler = aiCommandHandler
+
     def Start(self):
         print("Semi-AI Mode gestartet.")
+        self.cameraStream.Start()
+        self.aiCommandHandler.Start()
 
     def Stop(self):
-        print("Semi-AI Mode stopping.")
+        self.aiCommandHandler.Stop()
 
     def HandleMessage(self, message):
-        pass
+        data = message
+        if not data:
+            return
+
+        if "speed" in data:
+            self.driving.SetSpeedPercent(data["speed"])
+
+        if "steering" in data:
+            self.driving.SetSteeringPercent(data["steering"])
+
+        if "tilt" in data and "tiltSpeed" in data:
+            self.servoTilt.SetMovement(data["tilt"], data["tiltSpeed"])
+
+        if "pan" in data and "panSpeed" in data:
+            self.servoPan.SetMovement(data["pan"], data["panSpeed"])
+
+        if "cameraReset" in data and data["cameraReset"]:
+            self.servoTilt.SetAnglePercent(50)
+            self.servoPan.SetAnglePercent(50)
 
 
 class FullAiMode():
-    def __init__(self, lineFollower, yoloDetector, aiCommandHandler):
+    def __init__(self, lineFollower, aiCommandHandler):
         self.lineFollower = lineFollower
-        self.yoloDetector = yoloDetector
         self.aiCommandHandler = aiCommandHandler
 
     def Start(self):
@@ -65,8 +92,11 @@ class FullAiMode():
         self.aiCommandHandler.Start()
 
     def Stop(self):
+        self.aiCommandHandler.Stop()
+        self.lineFollower.Stop()
         print("Full-AI Mode stopping.")
 
     def HandleMessage(self, message):
         pass
+ 
  
