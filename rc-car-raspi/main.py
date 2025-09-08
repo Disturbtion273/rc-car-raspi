@@ -212,7 +212,7 @@ class Main:
             ip = self.getIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
-            self.modeManager.SetMode("manual")  
+            self.modeManager.SetMode("none")  
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 

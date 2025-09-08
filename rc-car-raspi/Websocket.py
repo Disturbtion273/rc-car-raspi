@@ -53,4 +53,3 @@ class WebsocketServer:
 
     def Send(self, message):
         self.queue.put(message)
-

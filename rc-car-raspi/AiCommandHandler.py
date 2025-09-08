@@ -105,22 +105,16 @@ class AiCommandHandler:
         if label == "unbegrenzt":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(50)
-            else:
-                self.SetMaxSpeedPercent(100)
             print("Unbegrenzt erkannt")
 
         elif label == "fuenfzig":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(25)
-            else:
-                self.driving.SetMaxSpeedPercent(50)
             print("50 erkannt")
 
         elif label == "dreissig":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(15)
-            else:
-                self.driving.SetMaxSpeedPercent(30)
             print("30 erkannt")
 
         elif label == "achtung":
