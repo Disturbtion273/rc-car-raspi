@@ -15,6 +15,7 @@ from WebsocketCommandHandler import WebsocketCommandHandler
 from CameraStream import CameraStream
 from LineFollower import LineFollower
 from Battery import Battery
+from Speaker import Speaker
 
 class Main:
     def InitializeHardware(self):
@@ -37,6 +38,7 @@ class Main:
         self.servoTilt.SetAnglePercent(50)      
         self.servoPan.SetAnglePercent(50)  
         self.battery = Battery(self.i2c,self.websocketServer)
+        Speaker.initialize(volume=1)  
 
     def StartWebsocketServer(self):
         self.websocketCommandHandler = WebsocketCommandHandler(self.motorLeft, self.motorRight, self.servoTilt, self.servoPan, self.servoSteering)
