@@ -22,6 +22,7 @@ from Driving import Driving
 from ModeManager import ModeManager
 from Modes import ManualMode, SemiAiMode, FullAiMode
 from CameraManager import CameraManager
+from Intersection import Intersection
 
 
 class Main:
@@ -62,8 +63,10 @@ class Main:
         self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering)
         self.lineFollower = LineFollower(driving=self.driving, grayscaleSensor=self.grayscaleSensor)
 
+        self.intersection = Intersection(self.driving, self.lineFollower, self.websocketServer)
+
         # AI Command Handler (needs to be created before fullAiMode)
-        self.aiCommandHandler = AiCommandHandler(self.driving, self.yoloDetector, self.websocketServer)
+        self.aiCommandHandler = AiCommandHandler(self.driving, self.lineFollower, self.yoloDetector, self.websocketServer, self.intersection)
 
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
@@ -72,7 +75,7 @@ class Main:
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
-        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager)
+        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.intersection)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
 
         #Camera Manager Singleton

@@ -1,8 +1,10 @@
 import json
+import ModeManager
 
 class WebsocketCommandHandler:
-    def __init__(self, modeManager):
+    def __init__(self, modeManager, intersection):
         self.modeManager = modeManager
+        self.intersection = intersection
 
     def HandleMessage(self, message):
         try:
@@ -12,9 +14,11 @@ class WebsocketCommandHandler:
             return
 
         # Warn about unknown keys
-        knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed", "cameraReset", "drivingMode"}
+        knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed", "cameraReset", "drivingMode", "intersectionDirection"}
         for key in data.keys():
-            if key in knownKeys:
+            if key == "intersectionDirection" and self.modeManager.currentMode == "automatic":
+                self.intersection.SetIntersectionDirection(data["intersectionDirection"])
+            elif key in knownKeys:
                 self.modeManager.HandleMessage(data)
             else:
                 print(f"⚠ Unknown command key: '{key}'")

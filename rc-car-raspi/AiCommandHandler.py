@@ -4,15 +4,17 @@ import ModeManager
 import json
 
 class AiCommandHandler:
-    def __init__(self, driving, yoloDetector, websocketServer):
+    def __init__(self, driving, lineFollower, yoloDetector, websocketServer, intersection):
         self.driving = driving
+        self.lineFollower = lineFollower
         self.yoloDetector = yoloDetector
         self.websocketServer = websocketServer
+        self.intersection = intersection
 
         self._running = False
         self._detect_thread = None
 
-        self.threshold = 0.6  # Confidence threshold for detections
+        self.threshold = 0.45  # Confidence threshold for detections
         self.fps = 3 #Dections per second
         self.timeOfDetection = 1 # seconds neeed to confirm detection
 
@@ -21,13 +23,16 @@ class AiCommandHandler:
         self.lastDetectedLabel = None
 
         # High confidence parameters  
-        self.highConfidenceThreshold = 0.9
+        self.highConfidenceThreshold = 0.8
         self.needNumberOfHighConfidenceDetections = 2
         self.currentNumberOfHighConfidenceDetections = 0
 
         self.detectedSign = None
         self.isSignDetected = False
-        self.needSizeWidthPercent = 18
+        self.needSizeWidthPercent = 16
+
+        self.signCooldowns = {}  # Stores last handled times for signs
+        self.cooldownDuration = 7  # seconds
 
 
     def Start(self):
@@ -90,11 +95,22 @@ class AiCommandHandler:
             message = json.dumps({"label": label})
             self.websocketServer.Send(message)
 
-    def IsSignNearEnough(self, labelWithMaxProbability ,sizePercent):
+    def IsSignNearEnough(self, labelWithMaxProbability, sizePercent):
+        now = time.time()
+
+        # Check if the sign is on cooldown
+        if labelWithMaxProbability in self.signCooldowns:
+            time_since_last_detection = now - self.signCooldowns[labelWithMaxProbability]
+            if time_since_last_detection < self.cooldownDuration:
+                print(f"{labelWithMaxProbability} is on cooldown ({int(self.cooldownDuration - time_since_last_detection)}s left). Skipping.")
+                return
+
         if self.isSignDetected and self.needSizeWidthPercent <= sizePercent and labelWithMaxProbability == self.detectedSign:
+            print("Label detected:" + labelWithMaxProbability)
             self.HandleDetection(self.detectedSign)
-            self.signDetected = False
+            self.isSignDetected = False
             self.detectedSign = None
+
 
     def SignDetection(self, label):
         print("Sign Detected")
@@ -144,6 +160,34 @@ class AiCommandHandler:
                 self.driving.SetSpeedPercent(0)
                 print("Sackgasse erkannt")
 
+        elif label == "abbiegen":
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.lineFollower.SetDirection("right")
+
+                def continueCenterDriving():
+                    self.lineFollower.SetDirection("center")
+
+                timer = threading.Timer(4.0, continueCenterDriving)
+                timer.start()
+                print("Abbiegen erkannt")
+
+        elif label == "durchfahrt_verboten":
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.lineFollower.SetDirection("right")
+
+                def continueCenterDriving():
+                    self.lineFollower.SetDirection("center")
+
+                timer = threading.Timer(4.0, continueCenterDriving)
+                timer.start()
+                print("Durchfahrt verboten erkannt")
+
+        elif label == "kreuzung":
+            if ModeManager.ModeManager.currentMode == "automatic":
+                self.intersection.StartIntersection()
+                print("Kreuzung erkannt")
+
+        self.signCooldowns[label] = time.time()
         self.SendDetectedLabel(label)
 
 

@@ -17,7 +17,7 @@ class ModeManager:
                 self.mode.Stop() if self.mode is not None else None
                 self.modeName = mode
                 self.mode = self.modes[mode]
-                ModeManager.currentMode = self.mode
+                ModeManager.currentMode = self.modeName
                 print(f"Mode is set to: {self.modeName}")
                 if self.mode is not None:
                     self.mode.Start()

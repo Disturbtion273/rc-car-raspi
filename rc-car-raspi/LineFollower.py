@@ -15,48 +15,78 @@ class LineFollower:
         self.maxSpeed = 50
         self.minSpeed = 20
 
+        # Direction preference: "center", "left", or "right"
+        self.direction = "center"
+
+    def SetDirection(self, direction):
+        print("Set direction to " + direction)
+        if direction in ["left", "center", "right"]:
+            self.direction = direction
+        else:
+            raise ValueError("Invalid direction. Use 'left', 'center', or 'right'.")
+
     def SetSteering(self, value):
         self.driving.SetSteeringPercent(value)
 
     def ReadLinePosition(self):
-        # Read grayscale values from the 3 sensors
         readings = [
-            self.sensor.ReadGrayscalePercent(1),
-            self.sensor.ReadGrayscalePercent(2),
-            self.sensor.ReadGrayscalePercent(3)
+            self.sensor.ReadGrayscalePercent(1),  # Left
+            self.sensor.ReadGrayscalePercent(2),  # Center
+            self.sensor.ReadGrayscalePercent(3)   # Right
         ]
 
-        # Normalize to 0–1
-        lineValues = [r / 100.0 for r in readings]  
-        position = (lineValues[0] * 0 + lineValues[1] * 50 + lineValues[2] * 100)
+        lineValues = [r / 100.0 for r in readings]
         total = sum(lineValues)
 
         if total == 0:
-            return None  # No line detected
+            return None  # Line is lost
 
-        position /= total
+        position = (lineValues[0] * 0 + lineValues[1] * 50 + lineValues[2] * 100) / total
+
+        # Detect potential fork/split (multiple high readings)
+        high_threshold = 0.5  # You may tune this threshold
+        left_detected = lineValues[0] > high_threshold
+        right_detected = lineValues[2] > high_threshold
+
+        if self.direction == "right" and right_detected and not left_detected:
+            position = 80  # Force bias toward right
+        elif self.direction == "left" and left_detected and not right_detected:
+            position = 20  # Force bias toward left
+        elif self.direction == "right":
+            position = position * 0.85 + 15  # stronger bias
+        elif self.direction == "left":
+            position = position * 0.85       # stronger bias
+
         return max(0, min(100, position))
+
+
 
     def FollowLine(self):
         position = self.ReadLinePosition()
         if position is None:
-            # Line lost – stop or drive straight at minimum speed
             self.driving.SetSpeedPercent(self.minSpeed)
             return
 
-        deviation = position - 50  # -50 (left) to +50 (right)
+        deviation = position - 50  # Deviation: -50 (left) to +50 (right)
+
+        # Amplify deviation for left/right modes
+        if self.direction == "left":
+            deviation *= 1.8  # Steer more aggressively left
+        elif self.direction == "right":
+            deviation *= 1.8  # Steer more aggressively right
 
         # Proportional steering control
         steeringValue = 50 + self.kp * deviation
         steeringValue = max(self.minSteering, min(self.maxSteering, steeringValue))
         self.driving.SetSteeringPercent(steeringValue)
 
-        # Speed control – reduce speed with higher deviation
+        # Speed control
         error = abs(deviation)
         speed = self.maxSpeed - (error / 50.0) * (self.maxSpeed - self.minSpeed)
         speed = max(self.minSpeed, min(self.maxSpeed, speed))
 
         self.driving.SetSpeedPercent(speed)
+
 
     def Run(self):
         while self.running:
@@ -75,4 +105,3 @@ class LineFollower:
         if self.thread:
             self.thread.join()
         self.driving.SetSpeedPercent(0)
- 
