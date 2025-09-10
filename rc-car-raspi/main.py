@@ -94,8 +94,6 @@ class Main:
 
     def Test(self):
         self.Initialize()
-        self.StartWebsocketServer()
-
         try:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
