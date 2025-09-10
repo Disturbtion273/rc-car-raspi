@@ -82,6 +82,9 @@ class Main:
         #Camera Manager Singleton
         self.cameraManager = CameraManager()
 
+        # Battery
+        self.battery = Battery(self.i2c, self.websocketServer)
+
     def getIp(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

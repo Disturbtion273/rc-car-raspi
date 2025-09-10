@@ -18,6 +18,9 @@ class Battery:
         self.isMonitoring = False
         self.thread = None
         self.websocketServer = websocketServer
+
+        self.percentCharged = 50
+
         self.StartMonitoring()
 
     def GetVoltage(self):
@@ -38,6 +41,10 @@ class Battery:
         voltage = self.GetVoltage()
         percent = (voltage - 6.0) / (8.4 - 6.0) * 100
         percent = max(0, min(100, percent))  # Clamp 0–100%
+        # prevent from showing 0% when voltage is above 6.0V
+        if percent == 0:
+            percent = self.percentCharged
+        self.percentCharged = percent
         return percent, voltage
 
     def MonitorLoop(self):
