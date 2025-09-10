@@ -23,7 +23,8 @@ from ModeManager import ModeManager
 from Modes import ManualMode, SemiAiMode, FullAiMode
 from CameraManager import CameraManager
 from Intersection import Intersection
-
+from Battery import Battery
+from Speaker import Speaker
 
 class Main:
     def Initialize(self):
@@ -43,7 +44,7 @@ class Main:
         # Sensors
         self.grayscaleSensor = GrayscaleSensor(self.i2c)
         self.ultrasonicSensor = UltrasonicSensor()
-
+        
         # AI / Computer Vision
         self.yoloDetector = YoloDetector()
 
@@ -81,7 +82,6 @@ class Main:
         #Camera Manager Singleton
         self.cameraManager = CameraManager()
 
-
     def getIp(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -94,6 +94,7 @@ class Main:
 
     def Test(self):
         self.Initialize()
+
         try:
             self.motorLeft.SetSpeedPercent(0)
             self.motorRight.SetSpeedPercent(0)
@@ -214,6 +215,7 @@ class Main:
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
             self.modeManager.SetMode("none")  
+
             while True:
                 time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
 
