@@ -23,17 +23,18 @@ class AiCommandHandler:
         self.lastDetectedLabel = None
 
         # High confidence parameters  
-        self.highConfidenceThreshold = 0.8
+        self.highConfidenceThreshold = 0.70
         self.needNumberOfHighConfidenceDetections = 2
         self.currentNumberOfHighConfidenceDetections = 0
 
         self.detectedSign = None
         self.isSignDetected = False
-        self.needSizeWidthPercent = 16
+        self.needSizeWidthPercent = 14
 
         self.signCooldowns = {}  # Stores last handled times for signs
         self.cooldownDuration = 7  # seconds
-
+        
+        self.waitingForIntersectionDirection = False
 
     def Start(self):
         if self._running:
@@ -65,6 +66,11 @@ class AiCommandHandler:
     def DetectionConfirmer(self, detectedLabels):
         labelWithMaxProbability, probability, sizePercent = max(detectedLabels, key=lambda x: x[1])
         print("Size" + str(sizePercent))
+
+        # Exception for intersection sign
+        if not self.waitingForIntersectionDirection and labelWithMaxProbability == "kreuzung" and probability >= 0.5 and sizePercent >= 14:
+            self.HandleDetection(labelWithMaxProbability)
+            return
 
         self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
 
@@ -105,7 +111,8 @@ class AiCommandHandler:
                 print(f"{labelWithMaxProbability} is on cooldown ({int(self.cooldownDuration - time_since_last_detection)}s left). Skipping.")
                 return
 
-        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent and labelWithMaxProbability == self.detectedSign:
+        # Exception for sackgasse sign
+        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent or (labelWithMaxProbability == "sackgasse" and sizePercent <= 16) and labelWithMaxProbability == self.detectedSign :
             print("Label detected:" + labelWithMaxProbability)
             self.HandleDetection(self.detectedSign)
             self.isSignDetected = False
@@ -125,12 +132,12 @@ class AiCommandHandler:
 
         elif label == "fuenfzig":
             if ModeManager.ModeManager.currentMode == "automatic":
-                self.driving.SetMaxSpeedPercent(25)
+                self.driving.SetMaxSpeedPercent(30)
             print("50 erkannt")
 
         elif label == "dreissig":
             if ModeManager.ModeManager.currentMode == "automatic":
-                self.driving.SetMaxSpeedPercent(15)
+                self.driving.SetMaxSpeedPercent(20)
             print("30 erkannt")
 
         elif label == "achtung":
@@ -157,7 +164,7 @@ class AiCommandHandler:
 
         elif label == "sackgasse":
             if ModeManager.ModeManager.currentMode == "automatic":
-                self.driving.SetSpeedPercent(0)
+                self.driving.SetMaxSpeedPercent(0)
                 print("Sackgasse erkannt")
 
         elif label == "abbiegen":
@@ -173,6 +180,7 @@ class AiCommandHandler:
 
         elif label == "durchfahrt_verboten":
             if ModeManager.ModeManager.currentMode == "automatic":
+                
                 self.lineFollower.SetDirection("right")
 
                 def continueCenterDriving():
@@ -184,13 +192,24 @@ class AiCommandHandler:
 
         elif label == "kreuzung":
             if ModeManager.ModeManager.currentMode == "automatic":
-                self.intersection.StartIntersection()
-                print("Kreuzung erkannt")
+                if not self.waitingForIntersectionDirection:
+                    self.intersection.StartIntersection()
+                    self.waitingForIntersectionDirection = True
+                    print("Kreuzung erkannt - waiting for direction")
+                else:
+                    print("Already waiting for intersection direction")
 
-        self.signCooldowns[label] = time.time()
+        if label != "kreuzung":
+            self.signCooldowns[label] = time.time()
+
         self.SendDetectedLabel(label)
 
+    def HandleIntersectionDirection(self, direction):
+        if self.waitingForIntersectionDirection:
+            print(f"Received intersection direction: {direction}")
+            self.waitingForIntersectionDirection = False            
+            self.signCooldowns["kreuzung"] = time.time() 
 
-   
 
-    
+
+

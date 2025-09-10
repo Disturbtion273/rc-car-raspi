@@ -16,9 +16,8 @@ class Intersection:
 
     def StartIntersection(self):
         self.driving.SetMaxSpeedPercent(0)
-        print("SToppppp")
         self.isWaitedForWebsocketCommand = True
-        #self.SendIntersectionCommand()
+        self.SendIntersectionCommand()
         
     def SetIntersectionDirection(self, direction):
         if not self.isWaitedForWebsocketCommand:
@@ -27,7 +26,7 @@ class Intersection:
             self.direction = direction
             self.lineFollower.SetDirection(direction)
         else:
-            raise ValueError("Invalid direction. Use 'left', 'straight', or 'right'.")
+            raise ValueError("Invalid direction. Use 'left', 'center', or 'right'.")
 
         def continueCenterDriving():
             self.driving.SetMaxSpeedPercent(100)

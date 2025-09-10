@@ -71,7 +71,7 @@ class Main:
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan, self.aiCommandHandler)
-        self.fullAiMode = FullAiMode(self.lineFollower, self.aiCommandHandler)
+        self.fullAiMode = FullAiMode(self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
