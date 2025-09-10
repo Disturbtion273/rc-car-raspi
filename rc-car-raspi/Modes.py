@@ -10,6 +10,7 @@ class ManualMode():
 
     def Start(self):
         print("Manual Mode starts.")
+        self.driving.SetMaxSpeedPercent(100)
         self.cameraStream.Start()
 
     def Stop(self):
@@ -53,6 +54,7 @@ class SemiAiMode():
 
     def Start(self):
         print("Semi-AI Mode gestartet.")
+        self.driving.SetMaxSpeedPercent(100)
         self.cameraStream.Start()
         self.aiCommandHandler.Start()
 

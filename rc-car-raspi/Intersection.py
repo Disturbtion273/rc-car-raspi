@@ -11,7 +11,6 @@ class Intersection:
         self.maxSpeed = 0
 
     def SendIntersectionCommand(self):
-        raise NotImplementedError("This method should be overridden in a subclass")
         self.websocket.Send("intersection")
 
     def StartIntersection(self):
