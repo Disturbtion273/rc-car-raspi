@@ -72,23 +72,27 @@ class Main:
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan, self.aiCommandHandler)
-        self.fullAiMode = FullAiMode(self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
+        self.fullAiMode = FullAiMode(self.driving, self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
         self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.intersection)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
 
-        #Camera Manager Singleton
+        # Camera Manager Singleton
         self.cameraManager = CameraManager()
 
         # Battery
         self.battery = Battery(self.i2c, self.websocketServer)
 
+        # Speaker
+        Speaker.initialize()
+
     def getIp(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("192.168.0.1", 1))
+
             ip = s.getsockname()[0]
             s.close()
             return ip
@@ -235,6 +239,7 @@ class Main:
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
             self.cameraManager.Stop()
+            self.battery.StopMonitoring()
             sys.stdout.flush()
             sys.stderr.flush()
 

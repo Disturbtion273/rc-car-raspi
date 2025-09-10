@@ -25,29 +25,35 @@ class Speaker:
         cls.volume = volume
 
     @staticmethod
-    def speak(text, lang="de"):
+    def Speak(text, lang="de"):
         """Text-to-Speech using gTTS"""
         if Speaker.device is None:
             raise RuntimeError("Speaker not initialized. Call Speaker.initialize() first.")
 
-        # Create temporary mp3 file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
-            mp3_file = f.name
-        tts = gTTS(text=text, lang=lang)
-        tts.save(mp3_file)
+        from threading import Thread
 
-        # Convert mp3 -> wav (because sounddevice works with wav)
-        wav_file = mp3_file.replace(".mp3", ".wav")
-        sound = AudioSegment.from_mp3(mp3_file)
-        sound.export(wav_file, format="wav")
+        def process_and_play():
+            # Create temporary mp3 file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+                mp3_file = f.name
+            tts = gTTS(text=text, lang=lang)
+            tts.save(mp3_file)
 
-        # Play WAV file
-        data, samplerate = sf.read(wav_file, dtype='float32')
-        print(Speaker.device)
-        sd.play(data * Speaker.volume, samplerate, device=Speaker.device)
-        sd.wait()
+            # Convert mp3 -> wav (because sounddevice works with wav)
+            wav_file = mp3_file.replace(".mp3", ".wav")
+            sound = AudioSegment.from_mp3(mp3_file)
+            sound.export(wav_file, format="wav")
 
-        # Clean up temporary files
-        os.remove(mp3_file)
-        os.remove(wav_file)
+            # Play WAV file
+            data, samplerate = sf.read(wav_file, dtype='float32')
+            print("Speak: "+ text)
+            sd.play(data * Speaker.volume, samplerate, device=Speaker.device)
+            sd.wait()
+
+            # Clean up temporary files
+            os.remove(mp3_file)
+            os.remove(wav_file)
+
+        thread = Thread(target=process_and_play)
+        thread.start()
 

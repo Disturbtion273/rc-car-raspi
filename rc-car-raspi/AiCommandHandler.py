@@ -2,8 +2,11 @@ import threading
 import time
 import ModeManager
 import json
+from Speaker import Speaker as Speaker
 
 class AiCommandHandler:
+    Speaker = Speaker
+    
     def __init__(self, driving, lineFollower, yoloDetector, websocketServer, intersection):
         self.driving = driving
         self.lineFollower = lineFollower
@@ -35,6 +38,8 @@ class AiCommandHandler:
         self.cooldownDuration = 7  # seconds
         
         self.waitingForIntersectionDirection = False
+
+        self.spokenNameOfSign = ""
 
     def Start(self):
         if self._running:
@@ -128,44 +133,48 @@ class AiCommandHandler:
         if label == "unbegrenzt":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(50)
-            print("Unbegrenzt erkannt")
+            self.spokenNameOfSign = "Unbegrenzt"
 
         elif label == "fuenfzig":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(30)
-            print("50 erkannt")
+            self.spokenNameOfSign = "Fünfzig"
 
         elif label == "dreissig":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(20)
-            print("30 erkannt")
+            self.spokenNameOfSign = "Dreissig"
 
         elif label == "achtung":
-            print("Achtung erkannt")
-            saveSpeedForReset = self.driving.currentSpeed
-            self.driving.SetMaxSpeedPercent(self.driving.currentSpeed/2)
-            def resetSpeed():
-                self.driving.SetMaxSpeedPercent(saveSpeedForReset)
-                self.driving.SetSpeedPercent(saveSpeedForReset)
-            timer = threading.Timer(3.0, resetSpeed)
-            timer.start()
+            if ModeManager.ModeManager.currentMode == "automatic":
+                saveSpeedForReset = self.driving.currentSpeed
+                self.driving.SetMaxSpeedPercent(self.driving.currentSpeed/2)
+
+                def resetSpeed():
+                    self.driving.SetMaxSpeedPercent(saveSpeedForReset)
+                    self.driving.SetSpeedPercent(saveSpeedForReset)
+
+                timer = threading.Timer(3.0, resetSpeed)
+                timer.start()
+            self.spokenNameOfSign = "Achtung"
 
         elif label =="stopp":
-            print("Stop erkannt")
-            saveSpeedForReset = self.driving.currentSpeed
-            self.driving.SetMaxSpeedPercent(0)
+            if ModeManager.ModeManager.currentMode == "automatic":
+                saveSpeedForReset = self.driving.currentSpeed
+                self.driving.SetMaxSpeedPercent(0)
 
-            def continueDriving():
-                self.driving.SetMaxSpeedPercent(saveSpeedForReset)
-                self.driving.SetSpeedPercent(saveSpeedForReset)
-
-            timer = threading.Timer(2.0, continueDriving)
-            timer.start()
+                def continueDriving():
+                    self.driving.SetMaxSpeedPercent(saveSpeedForReset)
+                    self.driving.SetSpeedPercent(saveSpeedForReset)
+                
+                timer = threading.Timer(2.0, continueDriving)
+                timer.start()
+            self.spokenNameOfSign = "Stopp"
 
         elif label == "sackgasse":
             if ModeManager.ModeManager.currentMode == "automatic":
                 self.driving.SetMaxSpeedPercent(0)
-                print("Sackgasse erkannt")
+            self.spokenNameOfSign = "Sackgasse"
 
         elif label == "abbiegen":
             if ModeManager.ModeManager.currentMode == "automatic":
@@ -176,11 +185,10 @@ class AiCommandHandler:
 
                 timer = threading.Timer(4.0, continueCenterDriving)
                 timer.start()
-                print("Abbiegen erkannt")
+            self.spokenNameOfSign="Abbiegen"
 
         elif label == "durchfahrt_verboten":
             if ModeManager.ModeManager.currentMode == "automatic":
-                
                 self.lineFollower.SetDirection("right")
 
                 def continueCenterDriving():
@@ -188,7 +196,7 @@ class AiCommandHandler:
 
                 timer = threading.Timer(4.0, continueCenterDriving)
                 timer.start()
-                print("Durchfahrt verboten erkannt")
+            self.spokenNameOfSign="Durchfahrt Verboten"
 
         elif label == "kreuzung":
             if ModeManager.ModeManager.currentMode == "automatic":
@@ -199,10 +207,13 @@ class AiCommandHandler:
                 else:
                     print("Already waiting for intersection direction")
 
+            self.spokenNameOfSign="Kreuzung"
+
         if label != "kreuzung":
             self.signCooldowns[label] = time.time()
 
         self.SendDetectedLabel(label)
+        self.Speaker.Speak(self.spokenNameOfSign)
 
     def HandleIntersectionDirection(self, direction):
         if self.waitingForIntersectionDirection:

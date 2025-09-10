@@ -53,7 +53,7 @@ class Battery:
         """
         while self.isMonitoring:
             percent, voltage = self.GetPercentage()
-            print(f"Battery: {percent:.1f}% ({voltage:.2f} V)")
+            #print(f"Battery: {percent:.1f}% ({voltage:.2f} V)")
             # Send battery status via WebSocket
             percent = int(percent)
             jsonCommand = json.dumps({"battery": percent})
