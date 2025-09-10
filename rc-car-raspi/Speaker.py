@@ -43,7 +43,6 @@ class Speaker:
 
         # Play WAV file
         data, samplerate = sf.read(wav_file, dtype='float32')
-        print(Speaker.device)
         sd.play(data * Speaker.volume, samplerate, device=Speaker.device)
         sd.wait()
 

@@ -225,7 +225,7 @@ class Main:
                 Speaker.Speak(f"Die IP lautet {ip.replace('.', ' Punkt ')}", lang="de")
                 
                 if self.websocketServer.clientConnected.is_set():
-                    Speaker.Stop()  
+                    break
             except Exception as e:
                 print(f"Error during IP announcement: {e}")
 
