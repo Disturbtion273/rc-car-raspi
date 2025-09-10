@@ -5,6 +5,7 @@ VENV_DIR="venv"
 
 echo "🔧 Installiere systemabhängige Pakete..."
 sudo apt update
+
 sudo apt install -y \
     libcamera-apps libcamera-dev python3-libcamera python3-pip python3-venv git \
     ffmpeg libportaudio2  # ffmpeg für pydub/mp3->wav, portaudio für sounddevice
@@ -34,4 +35,5 @@ sudo bash ./i2samp.sh
  
 echo "✅ Setup abgeschlossen. Aktiviere dein Environment mit:"
 echo "   source $VENV_DIR/bin/activate"
+
 

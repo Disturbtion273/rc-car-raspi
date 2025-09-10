@@ -1,7 +1,8 @@
 import threading
+import time
 import cv2
+from CameraManager import CameraManager
 from flask import Flask, Response
-from picamera2 import Picamera2
 
 
 class CameraStream(threading.Thread):
@@ -10,47 +11,37 @@ class CameraStream(threading.Thread):
         self.host = host
         self.port = port
         self.app = Flask(__name__)
-        self.camera = Picamera2()
-        self.SetupCamera()
+        self.cameraManager = CameraManager()
         self.SetupRoutes()
-    
+
+    def Start(self):
+        if not self.is_alive():
+            self.start()
+        else:
+            print("CameraStream läuft bereits.")
+
     def run(self):
-        # This method is automatically called when the thread is started.
-        # It launches the Flask web server, which serves the video stream.
         self.app.run(host=self.host, port=self.port, debug=False, use_reloader=False, threaded=True)
 
-    def SetupCamera(self):
-        # Configures the camera resolution, format, and frame rate, and starts the camera.
-        config = self.camera.create_video_configuration(
-            main={"size": (640, 480), "format": "RGB888"},  
-            controls={"FrameRate": 20}
-        )
-        self.camera.configure(config)
-        self.camera.start()
-
     def SetupRoutes(self):
-        # Sets up the Flask route to serve the video feed.
         @self.app.route('/')
         def videoFeed():
             return Response(self.GenerateFrames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def GenerateFrames(self):
-        # Continuously captures frames from the camera, encodes them as JPEG, and yields them.
         while True:
-            # Capture a frame from the camera
-            frame = self.camera.capture_array()
+            frame = self.cameraManager.GetLatestFrame()
+            if frame is None:
+                time.sleep(0.1)
+                continue
 
-            # Encode frame as JPEG with quality 65
-            ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
+            ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 45])
             if not ret:
                 continue
 
             frameBytes = buffer.tobytes()
 
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frameBytes + b'\r\n')
 
-    def Stop(self):
-        # Stops and closes the camera.
-        self.camera.stop()
-        self.camera.close()
+            time.sleep(0.05)

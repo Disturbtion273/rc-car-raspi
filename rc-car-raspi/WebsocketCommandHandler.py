@@ -1,35 +1,34 @@
 import json
+import ModeManager
 
 class WebsocketCommandHandler:
-    def __init__(self, motor1, motor2, servoTilt, servoPan, servoSteering):
-        self.motorLeft = motor1
-        self.motorRight = motor2
-        self.servoTilt = servoTilt
-        self.servoPan = servoPan
-        self.servoSteering = servoSteering
+    def __init__(self, modeManager, intersection):
+        self.modeManager = modeManager
+        self.intersection = intersection
 
-    def handleMessage(self, message):
+    def HandleMessage(self, message):
         try:
             data = json.loads(message)
         except json.JSONDecodeError:
             print("⚠ Invalid JSON received:", message)
             return
 
-        if "speed" in data:
-            self.motorLeft.SetSpeedPercent(data["speed"])
-            self.motorRight.SetSpeedPercent(data["speed"])
-
-        if "steering" in data:
-            self.servoSteering.SetAnglePercent(data["steering"])
-
-        if "tilt" in data and "tiltSpeed" in data:
-            self.servoTilt.SetMovement(data["tilt"], data["tiltSpeed"])
-
-        if "pan" in data and "panSpeed" in data:
-            self.servoPan.SetMovement(data["pan"],data["panSpeed"])
-
         # Warn about unknown keys
-        knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed"}
+        knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed", "cameraReset", "drivingMode", "intersectionDirection"}
         for key in data.keys():
-            if key not in knownKeys:
+            if key == "intersectionDirection" and self.modeManager.currentMode == "automatic":
+                self.intersection.SetIntersectionDirection(data["intersectionDirection"])
+                # Also notify AiCommandHandler about the intersection direction
+                if hasattr(self.intersection, 'aiCommandHandler'):
+                    self.intersection.aiCommandHandler.HandleIntersectionDirection(data["intersectionDirection"])
+            elif key in knownKeys:
+                self.modeManager.HandleMessage(data)
+            else:
                 print(f"⚠ Unknown command key: '{key}'")
+
+    
+        
+
+        
+
+        
