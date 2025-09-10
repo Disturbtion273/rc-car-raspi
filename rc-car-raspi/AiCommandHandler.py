@@ -18,7 +18,7 @@ class AiCommandHandler:
         self._detect_thread = None
 
         self.threshold = 0.45  # Confidence threshold for detections
-        self.fps = 3 #Dections per second
+        self.fps = 2 #Dections per second
         self.timeOfDetection = 1 # seconds neeed to confirm detection
 
         self.currentNumberOfDetections = 0

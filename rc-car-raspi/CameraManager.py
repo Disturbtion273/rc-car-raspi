@@ -7,7 +7,7 @@ class CameraManager:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, resolution=(1080, 800), framerate=20):
+    def __new__(cls, resolution=(900, 700), framerate=20):
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(CameraManager, cls).__new__(cls)
