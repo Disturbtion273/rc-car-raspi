@@ -22,7 +22,6 @@ class ModeManager:
                 self.mode = self.modes[mode]
                 ModeManager.currentMode = self.modeName
                 print(f"Mode is set to: {self.modeName}")
-                self.Speaker.Speak(modeName)
                 if self.mode is not None:
                     self.mode.Start()
             else:
