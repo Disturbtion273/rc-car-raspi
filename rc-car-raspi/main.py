@@ -5,6 +5,7 @@ import sys
 import socket
 import traceback
 import sys
+import threading
 from I2C import I2C
 from PWM import PWM
 from Motor import Motor
@@ -88,7 +89,7 @@ class Main:
         # Speaker
         Speaker.initialize()
 
-    def getIp(self):
+    def GetIp(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("192.168.0.1", 1))
@@ -216,15 +217,39 @@ class Main:
             sys.stdout.flush()
             sys.stderr.flush()
 
+    def SayIP(self):
+        ip = self.GetIp()
+        while not self.websocketServer.clientConnected.is_set():
+            try:
+                # Speak the full IP
+                Speaker.Speak(f"Die IP lautet {ip.replace('.', ' Punkt ')}", lang="de")
+                
+                if self.websocketServer.clientConnected.is_set():
+                    Speaker.Stop()  
+            except Exception as e:
+                print(f"Error during IP announcement: {e}")
+
+
     def Run(self):
         try:
-            ip = self.getIp()
+            ip = self.GetIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
-            self.modeManager.SetMode("none")  
+            self.modeManager.SetMode("none")
 
+            # Start IP announcement in a separate thread
+            threading.Thread(target=self.SayIP, daemon=True).start()
+
+            # Keep main thread alive for WebSocket server and other tasks
             while True:
-                time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
+                time.sleep(1)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            traceback.print_exc()
+        except KeyboardInterrupt:
+            print("Program terminated by user")
+
 
         except Exception as e:
             print(f"An error occurred: {e}")
