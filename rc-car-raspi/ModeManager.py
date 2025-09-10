@@ -1,7 +1,4 @@
-from Speaker import Speaker as Speaker
-
 class ModeManager:
-    Speaker = Speaker
     currentMode = None
     def __init__(self, manualMode, semiAiMode, fullAiMode, mode="none"):
         self.modes = {
