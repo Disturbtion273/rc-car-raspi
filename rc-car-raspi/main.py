@@ -221,11 +221,18 @@ class Main:
         ip = self.GetIp()
         while not self.websocketServer.clientConnected.is_set():
             try:
-                # Speak the full IP
-                Speaker.Speak(f"Die IP lautet {ip.replace('.', ' Punkt ')}", lang="de")
-                
+                # Divide IPs into groups of three to check for client connection in between.
+                ipArray = [octet + '.' if i < len(ip.split('.')) - 1 else octet 
+                for i, octet in enumerate(ip.split('.'))]
+
+                Speaker.Speak(f"Die IP lautet {ipArray[0].replace('.', ' Punkt ')}")
                 if self.websocketServer.clientConnected.is_set():
                     break
+                for i in range (1,4):
+                    Speaker.Speak(f"{ipArray[i].replace('.', ' Punkt ')}")
+                    if self.websocketServer.clientConnected.is_set():
+                        break
+                
             except Exception as e:
                 print(f"Error during IP announcement: {e}")
 
