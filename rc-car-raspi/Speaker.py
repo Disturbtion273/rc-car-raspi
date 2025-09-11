@@ -25,7 +25,7 @@ class Speaker:
         cls.volume = volume
 
     @staticmethod
-    def speak(text, lang="de"):
+    def Speak(text, lang="de"):
         """Text-to-Speech using gTTS"""
         if Speaker.device is None:
             raise RuntimeError("Speaker not initialized. Call Speaker.initialize() first.")
@@ -43,11 +43,9 @@ class Speaker:
 
         # Play WAV file
         data, samplerate = sf.read(wav_file, dtype='float32')
-        print(Speaker.device)
         sd.play(data * Speaker.volume, samplerate, device=Speaker.device)
         sd.wait()
 
         # Clean up temporary files
         os.remove(mp3_file)
         os.remove(wav_file)
-

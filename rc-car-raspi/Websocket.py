@@ -7,6 +7,7 @@ class WebsocketServer:
     def __init__(self, WebsocketCommandHandler):
         self.commandHandler = WebsocketCommandHandler
         self.queue = Queue()
+        self.clientConnected = threading.Event()
 
     def SetCommandHandler(self, handler):
         self.commandHandler = handler
@@ -21,7 +22,7 @@ class WebsocketServer:
     def MessageHandler(self, websocket):
         client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
         print(f"New client connected from {client_info}")
-
+        self.clientConnected.set()
         def Send():
             while True:
                 try:

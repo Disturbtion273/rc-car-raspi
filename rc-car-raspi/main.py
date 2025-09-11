@@ -5,6 +5,7 @@ import sys
 import socket
 import traceback
 import sys
+import threading
 from I2C import I2C
 from PWM import PWM
 from Motor import Motor
@@ -72,23 +73,27 @@ class Main:
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan, self.aiCommandHandler)
-        self.fullAiMode = FullAiMode(self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
+        self.fullAiMode = FullAiMode(self.driving, self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
         self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.intersection)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
 
-        #Camera Manager Singleton
+        # Camera Manager Singleton
         self.cameraManager = CameraManager()
 
         # Battery
         self.battery = Battery(self.i2c, self.websocketServer)
 
-    def getIp(self):
+        # Speaker
+        Speaker.initialize()
+
+    def GetIp(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("192.168.0.1", 1))
+
             ip = s.getsockname()[0]
             s.close()
             return ip
@@ -212,15 +217,46 @@ class Main:
             sys.stdout.flush()
             sys.stderr.flush()
 
+    def SayIP(self):
+        ip = self.GetIp()
+        while not self.websocketServer.clientConnected.is_set():
+            try:
+                # Divide IPs into groups of three to check for client connection in between.
+                ipArray = [octet + '.' if i < len(ip.split('.')) - 1 else octet 
+                for i, octet in enumerate(ip.split('.'))]
+
+                Speaker.Speak(f"Die IP lautet {ipArray[0].replace('.', ' Punkt ')}")
+                if self.websocketServer.clientConnected.is_set():
+                    break
+                for i in range (1,4):
+                    Speaker.Speak(f"{ipArray[i].replace('.', ' Punkt ')}")
+                    if self.websocketServer.clientConnected.is_set():
+                        break
+                
+            except Exception as e:
+                print(f"Error during IP announcement: {e}")
+
+
     def Run(self):
         try:
-            ip = self.getIp()
+            ip = self.GetIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
-            self.modeManager.SetMode("none")  
+            self.modeManager.SetMode("none")
 
+            # Start IP announcement in a separate thread
+            threading.Thread(target=self.SayIP, daemon=True).start()
+
+            # Keep main thread alive for WebSocket server and other tasks
             while True:
-                time.sleep(1) # Keep the main thread alive to allow WebSocket server to run
+                time.sleep(1)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            traceback.print_exc()
+        except KeyboardInterrupt:
+            print("Program terminated by user")
+
 
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -235,6 +271,7 @@ class Main:
             self.motorRight.SetSpeedPercent(0)
             self.i2c.Close()
             self.cameraManager.Stop()
+            self.battery.StopMonitoring()
             sys.stdout.flush()
             sys.stderr.flush()
 

@@ -43,9 +43,9 @@ class Motor:
             self.Stop()
             return
 
-        # A minimum speed of 15% is required for forward motion, and 85% for reverse,
+        # A minimum speed of 20% is required for forward motion, and 80% for reverse,
         # as the motor won't run reliably below that.
-        speedPercent = max(15, min(speedPercent, 100))
+        speedPercent = max(20, min(speedPercent, 100))
         pwmValue = int((speedPercent / 100.0) * 2028)
         self.PWM.SetMotorPwm(self.pwmChannel, pwmValue)
 

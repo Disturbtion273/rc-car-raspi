@@ -1,7 +1,7 @@
---------------
-Code used for i2s setup
-Code from https://github.com/sunfounder/robot-hat/blob/v2.0/i2samp.sh
---------------
+#--------------
+#Code used for i2s setup
+#Code from https://github.com/sunfounder/robot-hat/blob/v2.0/i2samp.sh
+#--------------
 
 #!/bin/bash
 

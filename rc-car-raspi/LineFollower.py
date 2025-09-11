@@ -44,22 +44,20 @@ class LineFollower:
         position = (lineValues[0] * 0 + lineValues[1] * 50 + lineValues[2] * 100) / total
 
         # Detect potential fork/split (multiple high readings)
-        high_threshold = 0.5  # You may tune this threshold
-        left_detected = lineValues[0] > high_threshold
-        right_detected = lineValues[2] > high_threshold
+        highThreshold = 0.5  
+        leftDetected = lineValues[0] > highThreshold
+        rightDetected = lineValues[2] > highThreshold
 
-        if self.direction == "right" and right_detected and not left_detected:
+        if self.direction == "right" and rightDetected and not leftDetected:
             position = 80  # Force bias toward right
-        elif self.direction == "left" and left_detected and not right_detected:
+        elif self.direction == "left" and leftDetected and not rightDetected:
             position = 20  # Force bias toward left
         elif self.direction == "right":
-            position = position * 0.85 + 15  # stronger bias
+            position = position * 0.85 + 15  
         elif self.direction == "left":
-            position = position * 0.85       # stronger bias
+            position = position * 0.85       
 
         return max(0, min(100, position))
-
-
 
     def FollowLine(self):
         position = self.ReadLinePosition()
@@ -71,9 +69,9 @@ class LineFollower:
 
         # Amplify deviation for left/right modes
         if self.direction == "left":
-            deviation *= 1.8  # Steer more aggressively left
+            deviation *= 1.8  
         elif self.direction == "right":
-            deviation *= 1.8  # Steer more aggressively right
+            deviation *= 1.8  
 
         # Proportional steering control
         steeringValue = 50 + self.kp * deviation
