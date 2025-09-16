@@ -180,11 +180,9 @@ class AiCommandHandler:
                 else:
                     print("Bereits in Kreuzungsmodus.")
             self.spokenNameOfSign = "Kreuzung"
-
-        if label == "kreuzung" and not self.waitingForIntersectionDirection:
-            self.SendDetectedLabel(label)
-            self.Speaker.Speak(self.spokenNameOfSign)
-
+        
+        self.SendDetectedLabel(label)
+        self.Speaker.Speak(self.spokenNameOfSign)
         self.currentNumberOfDetections = 0
         self.lastDetectedLabel = None
         

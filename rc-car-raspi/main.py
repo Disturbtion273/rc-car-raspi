@@ -269,10 +269,10 @@ class Main:
             self.lineFollower.Stop()
             self.aiCommandHandler.Stop()
             self.motorLeft.SetSpeedPercent(0)
-            self.motorRight.SetSpeedPercent(0)
-            self.i2c.Close()
+            self.motorRight.SetSpeedPercent(0) 
             self.cameraManager.Stop()
             self.battery.StopMonitoring()
+            self.i2c.Close()
             sys.stdout.flush()
             sys.stderr.flush()
 

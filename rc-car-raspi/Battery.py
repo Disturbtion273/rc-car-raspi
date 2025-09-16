@@ -18,7 +18,6 @@ class Battery:
         self.isMonitoring = True
         self.thread = None
         self.websocketServer = websocketServer
-        self.stopEvent = threading.Event()
         self.percentCharged = 50
 
         self.StartMonitoring()
@@ -65,7 +64,6 @@ class Battery:
         Starts the monitoring thread.
         """
         if self.thread is None or not self.thread.is_alive():
-            self.stopEvent.clear()
             self.thread = threading.Thread(target=self.MonitorLoop, daemon=True)
             self.thread.start()
 
@@ -73,7 +71,7 @@ class Battery:
         """
         Stops the monitoring thread.
         """
-        self.stopEvent.set()
+        self.isMonitoring = False
         if self.thread is not None:
             self.thread.join()
             self.thread = None
