@@ -1,5 +1,6 @@
 import time
 import threading
+from Intersection import Intersection
 
 class LineFollower:
     def __init__(self, driving, grayscaleSensor):
@@ -83,7 +84,8 @@ class LineFollower:
         speed = self.maxSpeed - (error / 50.0) * (self.maxSpeed - self.minSpeed)
         speed = max(self.minSpeed, min(self.maxSpeed, speed))
 
-        self.driving.SetSpeedPercent(speed)
+        if not Intersection.isWaitedForWebsocketCommand:
+            self.driving.SetSpeedPercent(speed)
 
 
     def Run(self):

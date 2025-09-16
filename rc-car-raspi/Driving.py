@@ -1,8 +1,12 @@
+import json
+from ModeManager import ModeManager
+
 class Driving:
-    def __init__(self, motor1, motor2, steering):
+    def __init__(self, motor1, motor2, steering, websocketServer):
         self.motor1 = motor1
         self.motor2 = motor2
         self.steering = steering
+        self.websocketServer = websocketServer
         self.currentSpeed = 0
         self.maxSpeed = 100
         self.currentSteering = 0
@@ -12,6 +16,9 @@ class Driving:
         self.motor1.SetSpeedPercent(speed)
         self.motor2.SetSpeedPercent(speed)
         self.currentSpeed = speed
+        if ModeManager.currentMode == "automatic":
+            message = json.dumps({"speed": speed})
+            self.websocketServer.Send(message)
 
     def SetSteeringPercent(self, angle):    
         angle = min(max(angle, 0), 100)

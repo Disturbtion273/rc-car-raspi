@@ -84,17 +84,19 @@ class SemiAiMode():
 
 
 class FullAiMode():
-    def __init__(self, driving, lineFollower, aiCommandHandler, servoPan, servoTilt):
+    def __init__(self, driving, lineFollower, aiCommandHandler, servoPan, servoTilt, cameraStream):
         self.lineFollower = lineFollower
         self.aiCommandHandler = aiCommandHandler
         self.servoPan = servoPan
         self.servoTilt = servoTilt
         self.driving = driving
+        self.cameraStream = cameraStream
 
     def Start(self):
         print("Full-AI Mode gestartet.")
         self.lineFollower.Start()
         self.aiCommandHandler.Start()
+        self.cameraStream.Start()
         self.servoPan.SetAnglePercent(50)
         self.servoTilt.SetAnglePercent(50)
         self.driving.SetMaxSpeedPercent(100)
