@@ -30,8 +30,8 @@ pip install "numpy<2"
 echo "📦 Installiere Abhängigkeiten aus requirements.txt..."
 pip install -r requirements.txt
 
-echo "Setup i2s..."
-sudo bash ./i2samp.sh
+#echo "Setup i2s..."
+#sudo bash ./i2samp.sh
  
 echo "✅ Setup abgeschlossen. Aktiviere dein Environment mit:"
 echo "   source $VENV_DIR/bin/activate"

@@ -6,7 +6,7 @@ from Speaker import Speaker as Speaker
 
 class AiCommandHandler:
     Speaker = Speaker
-    
+
     def __init__(self, driving, lineFollower, yoloDetector, websocketServer, intersection):
         self.driving = driving
         self.lineFollower = lineFollower
@@ -17,26 +17,19 @@ class AiCommandHandler:
         self._running = False
         self._detect_thread = None
 
-        self.threshold = 0.45  # Confidence threshold for detections
-        self.fps = 2 #Dections per second
-        self.timeOfDetection = 1 # seconds neeed to confirm detection
+        self.threshold = 0.45  
+        self.fps = 2  
 
         self.currentNumberOfDetections = 0
-        self.needNumberOfDetections = self.fps * self.timeOfDetection
         self.lastDetectedLabel = None
-
-        # High confidence parameters  
-        self.highConfidenceThreshold = 0.70
-        self.needNumberOfHighConfidenceDetections = 2
-        self.currentNumberOfHighConfidenceDetections = 0
 
         self.detectedSign = None
         self.isSignDetected = False
-        self.needSizeWidthPercent = 14
+        self.needSizeWidthPercent = 13
 
-        self.signCooldowns = {}  # Stores last handled times for signs
-        self.cooldownDuration = 7  # seconds
-        
+        self.signCooldowns = {} 
+        self.cooldownDuration = 7  
+
         self.waitingForIntersectionDirection = False
 
         self.spokenNameOfSign = ""
@@ -66,40 +59,28 @@ class AiCommandHandler:
             else:
                 self.currentNumberOfDetections = 0
                 print("Kein Label erkannt.")
-            time.sleep(1/self.fps)
+            time.sleep(1 / self.fps)
 
     def DetectionConfirmer(self, detectedLabels):
         labelWithMaxProbability, probability, sizePercent = max(detectedLabels, key=lambda x: x[1])
-        print("Size" + str(sizePercent))
-
-        # Exception for intersection sign
-        if not self.waitingForIntersectionDirection and labelWithMaxProbability == "kreuzung" and probability >= 0.5 and sizePercent >= 14:
-            self.HandleDetection(labelWithMaxProbability)
-            return
 
         self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
 
+        if probability < self.threshold:
+            print(f"Label {labelWithMaxProbability} erkannt, aber Wahrscheinlichkeit zu niedrig ({probability:.2f})")
+            return
+
         if labelWithMaxProbability == self.lastDetectedLabel:
-            if probability >= self.threshold:
-                self.currentNumberOfDetections += 1
-            else:
-                self.currentNumberOfDetections = 0
+            self.currentNumberOfDetections += 1
+            print(f"Label {labelWithMaxProbability} erneut erkannt ({self.currentNumberOfDetections}/2)")
 
-            if probability >= self.highConfidenceThreshold:
-                self.currentNumberOfHighConfidenceDetections += 1
-            else:
-                self.currentNumberOfHighConfidenceDetections = 0
+            if self.currentNumberOfDetections >= 2:
+                self.SignDetection(labelWithMaxProbability)
+                self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
         else:
+            print(f"Anderes Label erkannt ({labelWithMaxProbability}), Zähler wird zurückgesetzt.")
             self.lastDetectedLabel = labelWithMaxProbability
-            self.currentNumberOfDetections =  0
-            self.currentNumberOfHighConfidenceDetections = 0
-
-        if self.currentNumberOfDetections >= self.needNumberOfDetections or self.currentNumberOfHighConfidenceDetections >= 2:
-            self.SignDetection(labelWithMaxProbability)
-            self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
-            self.currentNumberOfDetections = 0
-            self.currentNumberOfHighConfidenceDetections = 0
-            self.lastDetectedLabel = None
+            self.currentNumberOfDetections = 1
 
     def SendDetectedLabel(self, label):
         if self.websocketServer:
@@ -109,23 +90,19 @@ class AiCommandHandler:
     def IsSignNearEnough(self, labelWithMaxProbability, sizePercent):
         now = time.time()
 
-        # Check if the sign is on cooldown
         if labelWithMaxProbability in self.signCooldowns:
             time_since_last_detection = now - self.signCooldowns[labelWithMaxProbability]
             if time_since_last_detection < self.cooldownDuration:
-                print(f"{labelWithMaxProbability} is on cooldown ({int(self.cooldownDuration - time_since_last_detection)}s left). Skipping.")
+                print(f"{labelWithMaxProbability} ist im Cooldown ({int(self.cooldownDuration - time_since_last_detection)}s übrig).")
                 return
 
-        # Exception for sackgasse sign
-        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent or (labelWithMaxProbability == "sackgasse" and sizePercent <= 16) and labelWithMaxProbability == self.detectedSign :
-            print("Label detected:" + labelWithMaxProbability)
+        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent or (labelWithMaxProbability == "sackgasse" and sizePercent <= 16) and labelWithMaxProbability == self.detectedSign:
+            print("Label erkannt: " + labelWithMaxProbability)
             self.HandleDetection(self.detectedSign)
             self.isSignDetected = False
             self.detectedSign = None
 
-
     def SignDetection(self, label):
-        print("Sign Detected")
         self.isSignDetected = True
         self.detectedSign = label
 
@@ -147,28 +124,26 @@ class AiCommandHandler:
 
         elif label == "achtung":
             if ModeManager.ModeManager.currentMode == "automatic":
-                saveSpeedForReset = self.driving.currentSpeed
-                self.driving.SetMaxSpeedPercent(self.driving.currentSpeed/2)
+                saveSpeed = self.driving.currentSpeed
+                self.driving.SetMaxSpeedPercent(saveSpeed / 2)
 
                 def resetSpeed():
-                    self.driving.SetMaxSpeedPercent(saveSpeedForReset)
-                    self.driving.SetSpeedPercent(saveSpeedForReset)
+                    self.driving.SetMaxSpeedPercent(saveSpeed)
+                    self.driving.SetSpeedPercent(saveSpeed)
 
-                timer = threading.Timer(3.0, resetSpeed)
-                timer.start()
+                threading.Timer(3.0, resetSpeed).start()
             self.spokenNameOfSign = "Achtung"
 
-        elif label =="stopp":
+        elif label == "stopp":
             if ModeManager.ModeManager.currentMode == "automatic":
-                saveSpeedForReset = self.driving.currentSpeed
+                saveSpeed = self.driving.currentSpeed
                 self.driving.SetMaxSpeedPercent(0)
 
                 def continueDriving():
-                    self.driving.SetMaxSpeedPercent(saveSpeedForReset)
-                    self.driving.SetSpeedPercent(saveSpeedForReset)
-                
-                timer = threading.Timer(2.0, continueDriving)
-                timer.start()
+                    self.driving.SetMaxSpeedPercent(saveSpeed)
+                    self.driving.SetSpeedPercent(saveSpeed)
+
+                threading.Timer(2.0, continueDriving).start()
             self.spokenNameOfSign = "Stopp"
 
         elif label == "sackgasse":
@@ -183,9 +158,8 @@ class AiCommandHandler:
                 def continueCenterDriving():
                     self.lineFollower.SetDirection("center")
 
-                timer = threading.Timer(4.0, continueCenterDriving)
-                timer.start()
-            self.spokenNameOfSign="Abbiegen"
+                threading.Timer(4.0, continueCenterDriving).start()
+            self.spokenNameOfSign = "Abbiegen"
 
         elif label == "durchfahrt_verboten":
             if ModeManager.ModeManager.currentMode == "automatic":
@@ -194,33 +168,29 @@ class AiCommandHandler:
                 def continueCenterDriving():
                     self.lineFollower.SetDirection("center")
 
-                timer = threading.Timer(4.0, continueCenterDriving)
-                timer.start()
-            self.spokenNameOfSign="Durchfahrt Verboten"
+                threading.Timer(4.0, continueCenterDriving).start()
+            self.spokenNameOfSign = "Durchfahrt Verboten"
 
         elif label == "kreuzung":
             if ModeManager.ModeManager.currentMode == "automatic":
                 if not self.waitingForIntersectionDirection:
                     self.intersection.StartIntersection()
                     self.waitingForIntersectionDirection = True
-                    print("Kreuzung erkannt - waiting for direction")
+                    print("Kreuzung erkannt – warte auf Richtung.")
                 else:
-                    print("Already waiting for intersection direction")
-
-            self.spokenNameOfSign="Kreuzung"
+                    print("Bereits in Kreuzungsmodus.")
+            self.spokenNameOfSign = "Kreuzung"
 
         if label != "kreuzung":
             self.signCooldowns[label] = time.time()
 
         self.SendDetectedLabel(label)
+        self.currentNumberOfDetections = 0
+        self.lastDetectedLabel = None
         self.Speaker.Speak(self.spokenNameOfSign)
 
     def HandleIntersectionDirection(self, direction):
         if self.waitingForIntersectionDirection:
-            print(f"Received intersection direction: {direction}")
-            self.waitingForIntersectionDirection = False            
-            self.signCooldowns["kreuzung"] = time.time() 
-
-
-
-
+            print(f"Kreuzungsrichtung erhalten: {direction}")
+            self.waitingForIntersectionDirection = False
+            self.signCooldowns["kreuzung"] = time.time()

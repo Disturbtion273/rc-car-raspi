@@ -242,10 +242,11 @@ class Main:
             ip = self.GetIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
+            self.SayIP()
             self.modeManager.SetMode("none")
 
             # Start IP announcement in a separate thread
-            threading.Thread(target=self.SayIP, daemon=True).start()
+            #threading.Thread(target=self.SayIP, daemon=True).start()
 
             # Keep main thread alive for WebSocket server and other tasks
             while True:
