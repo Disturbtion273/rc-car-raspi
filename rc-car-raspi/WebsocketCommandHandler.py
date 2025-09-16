@@ -2,9 +2,9 @@ import json
 import ModeManager
 
 class WebsocketCommandHandler:
-    def __init__(self, modeManager, intersection):
+    def __init__(self, modeManager, aiCommandHandler):
         self.modeManager = modeManager
-        self.intersection = intersection
+        self.aiCommandHandler = aiCommandHandler
 
     def HandleMessage(self, message):
         try:
@@ -17,10 +17,7 @@ class WebsocketCommandHandler:
         knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed", "cameraReset", "drivingMode", "intersectionDirection"}
         for key in data.keys():
             if key == "intersectionDirection" and self.modeManager.currentMode == "automatic":
-                self.intersection.SetIntersectionDirection(data["intersectionDirection"])
-                # Also notify AiCommandHandler about the intersection direction
-                if hasattr(self.intersection, 'aiCommandHandler'):
-                    self.intersection.aiCommandHandler.HandleIntersectionDirection(data["intersectionDirection"])
+                self.aiCommandHandler.HandleIntersectionDirection(data["intersectionDirection"])
             elif key in knownKeys:
                 self.modeManager.HandleMessage(data)
             else:

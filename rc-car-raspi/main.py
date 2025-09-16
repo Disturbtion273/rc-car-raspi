@@ -77,7 +77,7 @@ class Main:
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
-        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.intersection)
+        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.aiCommandHandler)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
 
         # Camera Manager Singleton
