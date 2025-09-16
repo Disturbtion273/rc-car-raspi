@@ -77,7 +77,7 @@ class Main:
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler
-        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.intersection)
+        self.websocketCommandHandler = WebsocketCommandHandler(self.modeManager, self.aiCommandHandler)
         self.websocketServer.SetCommandHandler(self.websocketCommandHandler)
 
         # Camera Manager Singleton
@@ -269,10 +269,10 @@ class Main:
             self.lineFollower.Stop()
             self.aiCommandHandler.Stop()
             self.motorLeft.SetSpeedPercent(0)
-            self.motorRight.SetSpeedPercent(0)
-            self.i2c.Close()
+            self.motorRight.SetSpeedPercent(0) 
             self.cameraManager.Stop()
             self.battery.StopMonitoring()
+            self.i2c.Close()
             sys.stdout.flush()
             sys.stderr.flush()
 

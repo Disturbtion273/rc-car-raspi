@@ -181,16 +181,16 @@ class AiCommandHandler:
                     print("Bereits in Kreuzungsmodus.")
             self.spokenNameOfSign = "Kreuzung"
 
-        if label != "kreuzung":
-            self.signCooldowns[label] = time.time()
-
         self.SendDetectedLabel(label)
         self.currentNumberOfDetections = 0
         self.lastDetectedLabel = None
         self.Speaker.Speak(self.spokenNameOfSign)
-
+        self.currentNumberOfDetections = 0
+        self.lastDetectedLabel = None
+        
     def HandleIntersectionDirection(self, direction):
         if self.waitingForIntersectionDirection:
             print(f"Kreuzungsrichtung erhalten: {direction}")
+            self.intersection.SetIntersectionDirection(direction)
             self.waitingForIntersectionDirection = False
             self.signCooldowns["kreuzung"] = time.time()
