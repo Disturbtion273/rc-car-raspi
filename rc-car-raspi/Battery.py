@@ -15,7 +15,7 @@ class Battery:
         self.i2c = i2c
         self.batteryRegister = 0x13  # Register für Batterie-ADC
         self.updateInterval = updateInterval
-        self.isMonitoring = False
+        self.isMonitoring = True
         self.thread = None
         self.websocketServer = websocketServer
         self.stopEvent = threading.Event()

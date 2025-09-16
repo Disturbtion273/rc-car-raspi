@@ -62,10 +62,10 @@ class Main:
         self.websocketServer.Start(host='0.0.0.0', port=9999)
 
         # Driving logic
-        self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering)
+        self.driving = Driving(self.motorLeft, self.motorRight, self.servoSteering, self.websocketServer)
         self.lineFollower = LineFollower(driving=self.driving, grayscaleSensor=self.grayscaleSensor)
 
-        self.intersection = Intersection(self.driving, self.lineFollower, self.websocketServer)
+        self.intersection = Intersection(self.driving, self.lineFollower)
 
         # AI Command Handler (needs to be created before fullAiMode)
         self.aiCommandHandler = AiCommandHandler(self.driving, self.lineFollower, self.yoloDetector, self.websocketServer, self.intersection)
@@ -73,7 +73,7 @@ class Main:
         # Modes
         self.manualMode = ManualMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan)
         self.semiAiMode = SemiAiMode(self.websocketServer, self.cameraStream, self.driving, self.servoTilt, self.servoPan, self.aiCommandHandler)
-        self.fullAiMode = FullAiMode(self.driving, self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt)
+        self.fullAiMode = FullAiMode(self.driving, self.lineFollower, self.aiCommandHandler, self.servoPan, self.servoTilt, self.cameraStream)
         self.modeManager = ModeManager(self.manualMode, self.semiAiMode, self.fullAiMode, mode="none")
 
         # WebSocket handler

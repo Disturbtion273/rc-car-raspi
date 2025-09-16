@@ -53,4 +53,5 @@ class WebsocketServer:
             print(f"Client {client_info} disconnected")
 
     def Send(self, message):
+        print(message)
         self.queue.put(message)
