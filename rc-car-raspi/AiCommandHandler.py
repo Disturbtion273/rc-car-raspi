@@ -180,8 +180,10 @@ class AiCommandHandler:
                 else:
                     print("Bereits in Kreuzungsmodus.")
             self.spokenNameOfSign = "Kreuzung"
-        
+
         self.SendDetectedLabel(label)
+        self.currentNumberOfDetections = 0
+        self.lastDetectedLabel = None
         self.Speaker.Speak(self.spokenNameOfSign)
         self.currentNumberOfDetections = 0
         self.lastDetectedLabel = None
