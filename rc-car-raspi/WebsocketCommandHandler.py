@@ -13,8 +13,6 @@ class WebsocketCommandHandler:
             print("⚠ Invalid JSON received:", message)
             return
 
-        print(message)
-
         # Warn about unknown keys
         knownKeys = {"speed", "steering", "tilt", "pan", "tiltSpeed", "panSpeed", "cameraReset", "drivingMode", "intersectionDirection"}
         for key in data.keys():
