@@ -26,7 +26,9 @@ class Speaker:
 
     @staticmethod
     def Speak(text, lang="de"):
-        """Text-to-Speech using gTTS"""
+        pass
+        """
+        #Text-to-Speech using gTTs
         if Speaker.device is None:
             raise RuntimeError("Speaker not initialized. Call Speaker.initialize() first.")
 
@@ -49,3 +51,4 @@ class Speaker:
         # Clean up temporary files
         os.remove(mp3_file)
         os.remove(wav_file)
+        """
