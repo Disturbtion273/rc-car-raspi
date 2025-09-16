@@ -242,7 +242,6 @@ class Main:
             ip = self.GetIp()
             print(f"\033[1;32m----- IP: {ip}----- \033[0m")
             self.Initialize()
-            self.SayIP()
             self.modeManager.SetMode("none")
 
             # Start IP announcement in a separate thread
