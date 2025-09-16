@@ -77,8 +77,6 @@ class AiCommandHandler:
             if self.currentNumberOfDetections >= 2:
                 self.SignDetection(labelWithMaxProbability)
                 self.IsSignNearEnough(labelWithMaxProbability, sizePercent)
-                self.currentNumberOfDetections = 0
-                self.lastDetectedLabel = None
         else:
             print(f"Anderes Label erkannt ({labelWithMaxProbability}), Zähler wird zurückgesetzt.")
             self.lastDetectedLabel = labelWithMaxProbability
@@ -187,6 +185,8 @@ class AiCommandHandler:
             self.signCooldowns[label] = time.time()
 
         self.SendDetectedLabel(label)
+        self.currentNumberOfDetections = 0
+        self.lastDetectedLabel = None
         self.Speaker.Speak(self.spokenNameOfSign)
 
     def HandleIntersectionDirection(self, direction):
