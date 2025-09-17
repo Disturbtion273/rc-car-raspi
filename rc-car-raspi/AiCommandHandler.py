@@ -58,6 +58,7 @@ class AiCommandHandler:
                 self.DetectionConfirmer(detected)
             else:
                 self.currentNumberOfDetections = 0
+                self.lastDetectedLabel = None
                 print("Kein Label erkannt.")
             time.sleep(1 / self.fps)
 
@@ -96,7 +97,7 @@ class AiCommandHandler:
                 print(f"{labelWithMaxProbability} ist im Cooldown ({int(self.cooldownDuration - time_since_last_detection)}s übrig).")
                 return
 
-        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent or (labelWithMaxProbability == "sackgasse" and sizePercent <= 16) and labelWithMaxProbability == self.detectedSign:
+        if self.isSignDetected and self.needSizeWidthPercent <= sizePercent or (labelWithMaxProbability == "sackgasse" and sizePercent <= 12) and labelWithMaxProbability == self.detectedSign:
             print("Label erkannt: " + labelWithMaxProbability)
             self.HandleDetection(self.detectedSign)
             self.isSignDetected = False
@@ -185,8 +186,6 @@ class AiCommandHandler:
         self.currentNumberOfDetections = 0
         self.lastDetectedLabel = None
         self.Speaker.Speak(self.spokenNameOfSign)
-        self.currentNumberOfDetections = 0
-        self.lastDetectedLabel = None
         
     def HandleIntersectionDirection(self, direction):
         if self.waitingForIntersectionDirection:

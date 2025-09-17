@@ -12,10 +12,12 @@ class Speaker:
 
     @classmethod
     def initialize(cls, device=None, volume=1.0):
+        pass
         """
         Initialize static parameters:
         device: ALSA device (e.g., 'plughw:0,0'), None = default device
         volume: volume level (0.0 to 1.0)
+        """
         """
         if device is None:
             device = sd.default.device[1]  # output device
@@ -23,7 +25,8 @@ class Speaker:
                 raise RuntimeError("No default output device found.")
         cls.device = device
         cls.volume = volume
-
+        """
+        
     @staticmethod
     def Speak(text, lang="de"):
         pass
